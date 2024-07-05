@@ -3,10 +3,11 @@ using Student.Resource;
 
 namespace Student.Services;
 
-public class StudentService(Database db) : IStudentService
+public class StudentService(Database db, ILogger<StudentService> logger) : IStudentService
 {
     public async Task<IList<Models.Student>> GetStudentsAsync()
     {
+        logger.LogDebug("Grab all Students");
         return await db.Students.ToListAsync();
     }
 
