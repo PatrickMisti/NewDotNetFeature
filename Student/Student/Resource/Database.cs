@@ -7,6 +7,7 @@ public class Database : DbContext
 {
     private readonly string _dbConnectionString = "appsettings.json";
     private readonly string _defaultConnectionString = "DefaultConnectionString";
+    private readonly string _postgreConnectionString = "PostgreSqlConnectionString";
     public DbSet<Models.Student> Students { get; set; }
 
     public Database(DbContextOptions<Database> options) : base(options)
@@ -25,7 +26,8 @@ public class Database : DbContext
         var config = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(Environment.CurrentDirectory, _dbConnectionString))
             .Build();
-        optionsBuilder.UseSqlServer(config.GetConnectionString(_defaultConnectionString));
+        //optionsBuilder.UseSqlServer(config.GetConnectionString(_defaultConnectionString));
+        optionsBuilder.UseNpgsql(config.GetConnectionString(_postgreConnectionString));
         base.OnConfiguring(optionsBuilder);
     }
 

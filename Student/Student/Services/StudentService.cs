@@ -14,6 +14,11 @@ public class StudentService(Database db, ILogger<StudentService> logger, IPublis
             Message = "Hllp"
         });
 
+        if (db.Database.EnsureCreated())
+        {
+
+        }
+
         logger.LogDebug("Grab all Students");
         return await db.Students.ToListAsync();
     }
@@ -38,7 +43,7 @@ public class StudentService(Database db, ILogger<StudentService> logger, IPublis
         db.Students.Add(student);
 
         oldStudent.Deleted = true;
-        oldStudent.TimeStamp = DateTime.Now;
+        oldStudent.TimeStamp = DateTime.UtcNow;
 
         db.Students.Update(oldStudent);
         return await db.SaveChangesAsync() > 0;

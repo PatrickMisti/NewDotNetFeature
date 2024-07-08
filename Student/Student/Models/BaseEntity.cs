@@ -9,7 +9,7 @@ public class BaseEntity
     [Key,DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     [JsonIgnore]
-    public DateTime TimeStamp { get; set;  } = DateTime.Now;
+    public DateTime TimeStamp { get; set;  } = DateTime.UtcNow;
     [JsonIgnore]
     public bool Deleted { get; set; } = false;
 }
