@@ -1,12 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Connectivity;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Student.Resource;
 
 namespace Student.Services;
 
-public class StudentService(Database db, ILogger<StudentService> logger) : IStudentService
+public class StudentService(Database db, ILogger<StudentService> logger, IPublishEndpoint bus) : IStudentService
 {
     public async Task<IList<Models.Student>> GetStudentsAsync()
     {
+        await bus.Publish(new CreateMessage
+        {
+            Message = "Hllp"
+        });
+
         logger.LogDebug("Grab all Students");
         return await db.Students.ToListAsync();
     }

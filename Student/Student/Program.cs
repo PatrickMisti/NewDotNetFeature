@@ -16,19 +16,18 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddMassTransit(opt =>
     {
-        opt.UsingRabbitMq((context, cfg) =>
+        opt.SetKebabCaseEndpointNameFormatter();
+
+        opt.UsingRabbitMq((ctx, cfg) =>
         {
             cfg.Host(RabbitConfig.RabbitMqConnectionHost, RabbitConfig.RabbitMqConnectionVirtualHost, c =>
             {
                 c.Username(RabbitConfig.RabbitMqUsername);
                 c.Password(RabbitConfig.RabbitMqPassword);
             });
-            cfg.ConfigureEndpoints(context);
+            //cfg.ConfigureEndpoints(context);
         });
     });
-    var serviceBus = builder.Services.BuildServiceProvider();
-    var bus = serviceBus.GetRequiredService<IBusControl>();
-    await bus.StartAsync();
 
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
