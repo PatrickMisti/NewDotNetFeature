@@ -1,6 +1,5 @@
 ﻿using Connectivity.Configuration;
 using MassTransit;
-using Student.Resource;
 using Student.Services;
 
 namespace Student.StartupConfig;
@@ -10,12 +9,6 @@ internal static class ServiceProviderWrapper
     public static IServiceCollection AddScopedCollection(this IServiceCollection cfg)
     {
         cfg.AddScoped<IStudentService, StudentService>();
-        return cfg;
-    }
-
-    public static IServiceCollection AddDatabaseContext(this IServiceCollection cfg)
-    {
-        cfg.AddDbContext<Database>();
         return cfg;
     }
 

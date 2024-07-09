@@ -10,7 +10,6 @@ builder.Host.UseSerilog((context, cfg) =>
 
 builder.Services
     .AddScopedCollection()
-    .AddDatabaseContext()
     .AddInnerCommunication()
     .AddEndpointHub();
 

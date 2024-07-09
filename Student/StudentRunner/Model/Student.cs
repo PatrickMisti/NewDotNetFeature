@@ -1,8 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿namespace StudentRunner.Model;
 
-namespace Student.Models;
-
-public class Student : BaseEntity
+public class Student: BaseEntity
 {
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;

@@ -1,5 +1,7 @@
 ﻿using Connectivity.Configuration;
 using MassTransit;
+using Serilog;
+using StudentRunner.Resources;
 
 namespace StudentRunner.StartupConfig
 {
@@ -23,6 +25,18 @@ namespace StudentRunner.StartupConfig
                 });
             });
 
+            return cfg;
+        }
+
+        public static IServiceCollection AddSerilogCustom(this IServiceCollection cfg, ConfigurationManager manager)
+        {
+            cfg.AddSerilog(ctx => ctx.ReadFrom.Configuration(manager));
+            return cfg;
+        }
+
+        public static IServiceCollection AddDatabase(this IServiceCollection cfg)
+        {
+            cfg.AddDbContext<Database>();
             return cfg;
         }
     }

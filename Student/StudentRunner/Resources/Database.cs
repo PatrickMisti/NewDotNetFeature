@@ -1,14 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Student.Resource.TableConfigurations;
+using StudentRunner.Model;
+using StudentRunner.Resources.TableConfig;
 
-namespace Student.Resource;
+namespace StudentRunner.Resources;
 
-public class Database : DbContext
+public class Database: DbContext
 {
     private readonly string _dbConnectionString = "appsettings.json";
     private readonly string _defaultConnectionString = "DefaultConnectionString";
     private readonly string _postgreConnectionString = "PostgreSqlConnectionString";
-    public DbSet<Models.Student> Students { get; set; }
+    public DbSet<Student> Students { get; set; }
 
     public Database(DbContextOptions<Database> options) : base(options)
     {
@@ -31,6 +32,13 @@ public class Database : DbContext
         base.OnConfiguring(optionsBuilder);
     }
 
+    public void InitDb()
+    {
+        var db = new Database();
+
+        db.Database.EnsureCreated();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         InitializeTable(modelBuilder);
@@ -40,11 +48,11 @@ public class Database : DbContext
 
     private void InitializeTable(ModelBuilder model)
     {
-        model.Entity<Models.Student>();
+        model.Entity<Student>();
     }
 
     private void AddConfigurations(ModelBuilder builder)
     {
-        builder.ApplyConfiguration(new BaseConfiguration<Models.Student>());
+        builder.ApplyConfiguration(new BaseConfiguration<Student>());
     }
 }
