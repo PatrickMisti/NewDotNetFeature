@@ -1,10 +1,10 @@
 ﻿using Connectivity.Messages;
-using MassTransit;
+using Student.Bussystem;
 using Student.Dtos;
 
 namespace Student.Services;
 
-public class StudentService(ILogger<StudentService> logger, IRequestClient<CreateStudentMessage> endpoint) : IStudentService
+public class StudentService(ILogger<StudentService> logger, BusController endpoint) : IStudentService
 {
     public async Task<IList<StudentDto>> GetStudentsAsync()
     {
@@ -19,8 +19,7 @@ public class StudentService(ILogger<StudentService> logger, IRequestClient<Creat
 
     public async Task<bool> CreateStudentAsync(StudentDto student)
     {
-        var s = await endpoint.GetResponse<StudentCreated>(student.MapToMessage());
-        //var i = await bus.PublishSubscribeAsync(student.MapToMessage());
+        var a = await endpoint.PubSubAsync<CreateStudentMessage, StudentCreated>(student.MapToMessage());
         return true;
     }
 

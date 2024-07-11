@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Student.Bussystem;
 using Student.Services;
 
 namespace Student.StartupConfig;
@@ -8,6 +9,7 @@ internal static class ServiceProviderWrapper
     public static IServiceCollection AddScopedCollection(this IServiceCollection cfg)
     {
         cfg.AddScoped<IStudentService, StudentService>();
+        cfg.AddSingleton<BusController>();
         return cfg;
     }
 
