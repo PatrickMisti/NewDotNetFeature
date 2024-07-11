@@ -1,5 +1,4 @@
-﻿using Connectivity.Configuration;
-using MassTransit;
+﻿using MassTransit;
 using Student.Services;
 
 namespace Student.StartupConfig;
@@ -12,20 +11,22 @@ internal static class ServiceProviderWrapper
         return cfg;
     }
 
-    public static IServiceCollection AddInnerCommunication(this IServiceCollection cfg)
+    public static IServiceCollection AddInnerCommunication(this IServiceCollection cfg, ConfigurationManager manager)
     {
         cfg.AddMassTransit(opt =>
         {
             opt.SetKebabCaseEndpointNameFormatter();
+            opt.AddConsumers(typeof(Program).Assembly);
 
-            opt.UsingRabbitMq((ctx, cfg) =>
+            opt.UsingRabbitMq((ctx, config) =>
             {
-                cfg.Host(RabbitConfig.RabbitMqConnectionHost, RabbitConfig.RabbitMqConnectionVirtualHost, c =>
+                config.Host(manager["Masstransit:Host"], "/", c =>
                 {
-                    c.Username(RabbitConfig.RabbitMqUsername);
-                    c.Password(RabbitConfig.RabbitMqPassword);
+                    c.Username(manager["Masstransit:Username"]!);
+                    c.Password(manager["Masstransit:Password"]!);
                 });
-                //cfg.ConfigureEndpoints(context);
+
+                config.ConfigureEndpoints(ctx);
             });
         });
 

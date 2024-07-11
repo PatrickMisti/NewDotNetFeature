@@ -1,20 +1,14 @@
-﻿using System.Text.Json;
-using Connectivity;
+﻿using Connectivity.Configuration;
+using Connectivity.Messages;
 using MassTransit;
 using Student.Dtos;
 
 namespace Student.Services;
 
-public class StudentService(ILogger<StudentService> logger, IPublishEndpoint bus) : IStudentService
+public class StudentService(ILogger<StudentService> logger, IRequestClient<StudentCreated> endpoint) : IStudentService
 {
     public async Task<IList<StudentDto>> GetStudentsAsync()
     {
-        await bus.Publish(new CreateMessage
-        {
-            Message = "Hllp"
-        });
-
-
         logger.LogDebug("Grab all Students");
         return new List<StudentDto>();
     }
@@ -26,7 +20,8 @@ public class StudentService(ILogger<StudentService> logger, IPublishEndpoint bus
 
     public async Task<bool> CreateStudentAsync(StudentDto student)
     {
-        await bus.Publish(student.MapToMessage());
+        var s = await endpoint.GetResponse<StudentCreated>(student.MapToMessage());
+        //var i = await bus.PublishSubscribeAsync(student.MapToMessage());
         return true;
     }
 

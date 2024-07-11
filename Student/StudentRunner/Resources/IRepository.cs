@@ -6,7 +6,7 @@ public interface IRepository<T>
 
     Task<T?> FindById(int id);
 
-    Task<bool> Create(T entity);
+    Task<int> Create(T entity);
 
     Task<bool> Update(T entity);
 

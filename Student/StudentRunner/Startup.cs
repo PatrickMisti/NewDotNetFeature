@@ -2,7 +2,10 @@
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddInnerCommunication().AddSerilogCustom(builder.Configuration).AddDatabase();
+builder.Services
+    .AddInnerCommunication(builder.Configuration)
+    .AddSerilogCustom(builder.Configuration)
+    .AddDatabase();
 
 var app = builder.Build();
 

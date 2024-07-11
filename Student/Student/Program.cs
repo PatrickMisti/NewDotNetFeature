@@ -9,8 +9,8 @@ builder.Host.UseSerilog((context, cfg) =>
 });
 
 builder.Services
+    .AddInnerCommunication(builder.Configuration)
     .AddScopedCollection()
-    .AddInnerCommunication()
     .AddEndpointHub();
 
 var app = builder.Build();

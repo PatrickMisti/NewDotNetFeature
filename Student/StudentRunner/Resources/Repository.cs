@@ -15,12 +15,13 @@ public class Repository<T>(Database db): IRepository<T> where T : BaseEntity
         return await db.Set<T>().FirstOrDefaultAsync(item => item.Id == id);
     }
 
-    public async Task<bool> Create(T entity)
+    public async Task<int> Create(T entity)
     {
         entity.Id = default;
         entity.TimeStamp = DateTime.UtcNow;
-        await db.Set<T>().AddAsync(entity);
-        return await db.SaveChangesAsync() > 0;
+        var i = await db.Set<T>().AddAsync(entity);
+        await db.SaveChangesAsync();
+        return i.Entity.Id;
     }
 
     public async Task<bool> Update(T entity)
