@@ -1,11 +1,10 @@
-﻿using Connectivity.Configuration;
-using Connectivity.Messages;
+﻿using Connectivity.Messages;
 using MassTransit;
 using Student.Dtos;
 
 namespace Student.Services;
 
-public class StudentService(ILogger<StudentService> logger, IRequestClient<StudentCreated> endpoint) : IStudentService
+public class StudentService(ILogger<StudentService> logger, IRequestClient<CreateStudentMessage> endpoint) : IStudentService
 {
     public async Task<IList<StudentDto>> GetStudentsAsync()
     {
