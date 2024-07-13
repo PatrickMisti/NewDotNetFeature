@@ -1,12 +1,14 @@
-﻿using Student.Dtos;
+﻿using OneOf;
+using OneOf.Types;
+using Student.Dtos;
 
 namespace Student.Services;
 
 public interface IStudentService
 {
-    Task<IList<StudentDto>> GetStudentsAsync();
-    Task<StudentDto?> GetStudentByIdAsync(int id);
-    Task<bool> CreateStudentAsync(StudentDto student);
-    Task<bool> UpdateStudentAsync(StudentDto student);
-    Task<bool> DeleteStudentAsync(int id);
+    Task<OneOf<IList<StudentDto>, Exception>> GetStudentsAsync();
+    Task<OneOf<StudentDto, NotFound , Exception>> GetStudentByIdAsync(int id);
+    Task<OneOf<True, False, Exception>> CreateStudentAsync(StudentDto student);
+    Task<OneOf<True,False, Exception>> UpdateStudentAsync(StudentDto student);
+    Task<OneOf<True, False, Exception>> DeleteStudentAsync(int id);
 }

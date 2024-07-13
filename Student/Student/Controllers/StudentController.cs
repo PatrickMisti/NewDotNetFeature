@@ -1,38 +1,120 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Mvc;
 using Student.Dtos;
 using Student.Services;
+using ILogger = Serilog.ILogger;
 
 namespace Student.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class StudentController(IStudentService repo)
+public class StudentController(IStudentService repo, ILogger logger)
 {
     [HttpGet]
+    [ProducesResponseType<List<StudentDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Route("all")]
-    public async Task<IList<StudentDto>> GetAll()
+    public async Task<IResult> GetAll()
     {
-        return await repo.GetStudentsAsync();
+        var result = await repo.GetStudentsAsync();
+        
+        IList<StudentDto>? response = result.Match(
+            completed => completed,
+            err =>
+            {
+                logger.Error("HttpError : ",err.Message);
+                return null!;
+            });
+
+
+        return response != null ? Results.Ok(response) : Results.NoContent();
     }
 
     [HttpPut]
-    [Route("create")]
-    public async Task<bool> AddStudent(StudentDto student)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType<StudentDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [Route("byId/{id}")]
+    public async Task<IResult> UpdateStudent(int id)
     {
-        return await repo.CreateStudentAsync(student);
+        var result = await repo.GetStudentByIdAsync(id);
+
+        var response = result.Match(
+            right => Results.Ok(right),
+            failed => Results.BadRequest(),
+            err =>
+            {
+                logger.Error("HttpError : ", err.Message);
+                return Results.Conflict();
+            });
+
+        return response;
     }
 
     [HttpPost]
-    [Route("update")]
-    public async Task<bool> UpdateStudent(StudentDto student)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [Route("create")]
+    public async Task<IResult> AddStudent(StudentDto student)
     {
-        return await repo.UpdateStudentAsync(student);
+        var result = await repo.CreateStudentAsync(student);
+
+        var response = result.Match(
+            right => Results.Created(), 
+            failed => Results.BadRequest(),
+            err => 
+            {
+                logger.Error("HttpError : ", err.Message);
+                return Results.Conflict();
+            });
+
+        return response;
+    }
+
+    [HttpPut]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [Route("update")]
+    public async Task<IResult> UpdateStudent(StudentDto student)
+    {
+        var result = await repo.UpdateStudentAsync(student);
+
+        var response = result.Match(
+            right => Results.Accepted(),
+            failed => Results.BadRequest(),
+            err => 
+            {
+                logger.Error("HttpError : ", err.Message);
+                return Results.Conflict();
+            });
+
+        return response;
     }
 
     [HttpDelete]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [Route("delete")]
-    public async Task<bool> DeleteStudent(int id)
+    public async Task<IResult> DeleteStudent(int id)
     {
-        return await repo.DeleteStudentAsync(id);
+        var result = await repo.DeleteStudentAsync(id);
+
+        var response = result.Match(
+            right => Results.Accepted(),
+            failed => Results.BadRequest(),
+            err => 
+            {
+                logger.Error("HttpError : ", err.Message);
+                return Results.Conflict();
+            });
+
+        return response;
     }
 }
