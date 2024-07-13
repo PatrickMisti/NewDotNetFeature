@@ -5,9 +5,8 @@ using ILogger = Serilog.ILogger;
 
 namespace StudentRunner.Communication;
 
-public class DeleteStudentCommunication(ILogger logger): IConsumer<GetDeleteStudentMessage>
+public class DeleteStudentCommunication(StudentRepository repo, ILogger logger): IConsumer<GetDeleteStudentMessage>
 {
-    StudentRepository repo = StudentRepository.Instance;
     public async Task Consume(ConsumeContext<GetDeleteStudentMessage> context)
     {
         try

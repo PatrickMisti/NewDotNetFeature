@@ -6,9 +6,8 @@ using ILogger = Serilog.ILogger;
 
 namespace StudentRunner.Communication;
 
-public class GetStudentByIdCommunication(ILogger logger): IConsumer<GetStudentByIdMessage>
+public class GetStudentByIdCommunication(StudentRepository repo, ILogger logger): IConsumer<GetStudentByIdMessage>
 {
-    StudentRepository repo = StudentRepository.Instance;
     public async Task Consume(ConsumeContext<GetStudentByIdMessage> context)
     {
         try

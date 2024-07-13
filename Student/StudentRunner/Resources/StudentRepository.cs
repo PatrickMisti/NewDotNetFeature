@@ -2,14 +2,6 @@
 
 namespace StudentRunner.Resources;
 
-internal class StudentRepository: Repository<Student>
+public class StudentRepository(Database db): Repository<Student>(db)
 {
-    private static Lazy<StudentRepository> _instance = new (() => new StudentRepository(new Database()));
-    public static StudentRepository Instance => _instance.Value;
-
-    private Database _repo;
-    private StudentRepository(Database db): base(db)
-    {
-        _repo = db;
-    }
 }

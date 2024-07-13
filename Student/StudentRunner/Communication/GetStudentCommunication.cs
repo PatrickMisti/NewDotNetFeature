@@ -6,15 +6,14 @@ using ILogger = Serilog.ILogger;
 
 namespace StudentRunner.Communication;
 
-public class GetStudentCommunication(ILogger logger): IConsumer<GetAllStudentMessage>
+public class GetStudentCommunication(StudentRepository repo, ILogger logger): IConsumer<GetAllStudentMessage>
 {
-    StudentRepository _repo = StudentRepository.Instance;
     public async Task Consume(ConsumeContext<GetAllStudentMessage> context)
     {
         try
         {
             logger.Debug("Got {0} message!", nameof(GetAllStudentMessage));
-            var list = await _repo.GetAll();
+            var list = await repo.GetAll();
             var responseList = list.Select(item => item.ToStudentClassMessage()).ToList();
             logger.Debug("Get all student! Count is {0}", responseList.Count);
             await context.RespondAsync(new AllStudentMessage

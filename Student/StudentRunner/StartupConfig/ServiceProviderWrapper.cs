@@ -37,6 +37,7 @@ internal static class ServiceProviderWrapper
     public static IServiceCollection AddDatabase(this IServiceCollection cfg)
     {
         cfg.AddDbContext<Database>();
+        cfg.AddSingleton<StudentRepository>();
         return cfg;
     }
 }
