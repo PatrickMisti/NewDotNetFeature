@@ -18,16 +18,16 @@ public class StudentController(IStudentService repo, ILogger logger)
     {
         var result = await repo.GetStudentsAsync();
         
-        IList<StudentDto>? response = result.Match(
-            completed => completed,
+        var response = result.Match(
+            completed => Results.Ok(completed),
             err =>
             {
                 logger.Error("HttpError : ",err.Message);
-                return null!;
+                return Results.NoContent();
             });
 
 
-        return response != null ? Results.Ok(response) : Results.NoContent();
+        return response;
     }
 
     [HttpPut]

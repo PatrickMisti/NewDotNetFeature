@@ -12,6 +12,6 @@ public class StudentServiceBenchmark
     {
         _client.DefaultRequestHeaders.Accept.Clear();
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        return await _client.GetFromJsonAsync<IList<StudentDto>>($"http://localhost:5023/api/student/all");
+        return (await _client.GetFromJsonAsync<IList<StudentDto>>($"http://localhost:5023/api/student/all"))!;
     }
 }
