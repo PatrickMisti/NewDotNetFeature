@@ -10,5 +10,4 @@ public class PubSub(IBus bus)
         var requestClient = factory.CreateRequestClient<TReq>();
         return await requestClient.GetResponse<TRes>(request);
     }
-
 }
