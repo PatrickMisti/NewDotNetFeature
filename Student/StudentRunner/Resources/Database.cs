@@ -7,7 +7,7 @@ namespace StudentRunner.Resources;
 public class Database: DbContext
 {
     private readonly string _dbConnectionString = "appsettings.json";
-    private readonly string _defaultConnectionString = "DefaultConnectionString";
+    //private readonly string _defaultConnectionString = "DefaultConnectionString";
     private readonly string _postgreConnectionString = "PostgreSqlConnectionString";
     public DbSet<Student> Students { get; set; }
 

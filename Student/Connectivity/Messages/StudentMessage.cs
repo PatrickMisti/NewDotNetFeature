@@ -1,28 +1,58 @@
-﻿using System.Runtime.Serialization;
-
-namespace Connectivity.Messages;
+﻿namespace Connectivity.Messages;
 
 
-public interface IStudentMessage
+public record StudentClassMessage
 {
-        
-}
-public class GetAllStudentMessage: IStudentMessage
-{
-}
-
-[Serializable]
-[DataContract]
-public record CreateStudentMessage : IStudentMessage
-{
-    [DataMember]
+    public int Id { get; set; }
     public string FirstName { get; set; }
-    [DataMember]
     public string LastName { get; set; }
-    [DataMember]
     public DateTime Birthday { get; set; }
-    [DataMember]
     public int Classroom { get; set; }
 }
 
-public record StudentCreated(int Id, string FirstName);
+
+public record GetAllStudentMessage
+{
+    public static GetAllStudentMessage Instance = new ();
+}
+
+public record AllStudentMessage
+{
+    public List<StudentClassMessage> Students { get; set; } = [];
+    public Exception? Error { get; set; } = null;
+}
+
+
+public record CreateStudentMessage(StudentClassMessage Student);
+public record StudentCreatedMessage
+{
+    public int Id { get; set; }
+    public Exception? Error { get; set; }
+}
+
+
+public record GetStudentByIdMessage(int Id);
+
+public record StudentByIdMessage
+{
+    public StudentClassMessage? Student { get; set; }
+    public Exception? Error { get; set; }
+}
+
+
+public record GetUpdateStudentMessage(StudentClassMessage Student);
+
+public record UpdateStudentMessage
+{
+    public bool IsUpdated { get; set; }
+    public Exception? Error { get; set; }
+}
+
+
+public record GetDeleteStudentMessage(int Id);
+
+public record DeleteStudentMessage
+{
+    public bool IsDeleted { get; set; }
+    public Exception? Error { get; set; }
+}

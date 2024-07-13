@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Connectivity
+namespace Testing.Benchmarktests
 {
-    public record CreateMessage
+    internal class StudentServiceBenchmark
     {
-        public string Message { get; set; }
     }
 }

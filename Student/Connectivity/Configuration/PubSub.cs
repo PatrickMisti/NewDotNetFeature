@@ -1,33 +1,14 @@
 ﻿using MassTransit;
 
-namespace Connectivity.Configuration
+namespace Connectivity.Configuration;
+
+public class PubSub(IBus bus)
 {
-    public class PubSub<TResponse>(IPublishEndpoint bus): IConsumer<TResponse> where TResponse : class
+    public async Task<Response<TRes>> PubSubAsync<TReq, TRes>(TReq request) where TReq : class where TRes : class
     {
-        private static Action<TResponse>? _func;
-        public Task Consume(ConsumeContext<TResponse> context)
-        {
-            _func?.Invoke(context.Message);
-            return Task.CompletedTask;
-        }
-
-        public async Task<TResponse> PublishSubscribeAsync<TRequest>(TRequest message)
-        {
-
-            var tcs = new TaskCompletionSource<TResponse>();
-            var task = tcs.Task;
-
-            _func = response =>
-            {
-                tcs.SetResult(response);
-            };
-
-            await bus.Publish(message!);
-
-            var i = await task;
-
-            return i;
-        }
-
+        var factory = bus.CreateClientFactory();
+        var requestClient = factory.CreateRequestClient<TReq>();
+        return await requestClient.GetResponse<TRes>(request);
     }
+
 }
