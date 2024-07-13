@@ -2,18 +2,21 @@
 using MassTransit;
 using StudentRunner.Mapper;
 using StudentRunner.Resources;
+using ILogger = Serilog.ILogger;
 
 namespace StudentRunner.Communication;
 
-public class CreateStudentCommunication: IConsumer<CreateStudentMessage>
+public class CreateStudentCommunication(ILogger logger): IConsumer<CreateStudentMessage>
 {
     StudentRepository repo = StudentRepository.Instance;
     public async Task Consume(ConsumeContext<CreateStudentMessage> context)
     {
         try
         {
+            logger.Debug("Got {0} message!", nameof(CreateStudentMessage));
             var response = context.Message.Student;
             var id = await repo.Create(response.ToStudent());
+            logger.Debug("Create student was {0}", id > 0 ? "successfully" : "failure");
             await context.RespondAsync(new StudentCreatedMessage
             {
                 Id = id
@@ -21,6 +24,7 @@ public class CreateStudentCommunication: IConsumer<CreateStudentMessage>
         }
         catch (Exception e)
         {
+            logger.Error("Create student occurs a exception!", e.Message);
             await context.RespondAsync(new StudentCreatedMessage
             {
                 Error = e
