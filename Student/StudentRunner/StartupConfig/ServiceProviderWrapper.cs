@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using StudentRunner.Resources;
 
@@ -6,6 +7,7 @@ namespace StudentRunner.StartupConfig;
 
 internal static class ServiceProviderWrapper
 {
+    private static readonly string PostgreConnectionString = "PostgreSqlConnectionString";
     public static IServiceCollection AddInnerCommunication(this IServiceCollection cfg, ConfigurationManager manager)
     {
         cfg.AddMassTransit(opt => 
@@ -34,10 +36,17 @@ internal static class ServiceProviderWrapper
         return cfg;
     }
 
-    public static IServiceCollection AddDatabase(this IServiceCollection cfg)
+    public static IServiceCollection AddDatabase(this IServiceCollection cfg, ConfigurationManager manager)
     {
-        cfg.AddDbContext<Database>();
         cfg.AddSingleton<StudentRepository>();
+
+        cfg.AddDbContext<Database>(opt =>
+        {
+            opt
+                .UseNpgsql(manager.GetConnectionString(PostgreConnectionString))
+                .EnableSensitiveDataLogging();
+        });
+        
         return cfg;
     }
 }

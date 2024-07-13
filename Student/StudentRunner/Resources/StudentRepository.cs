@@ -2,6 +2,10 @@
 
 namespace StudentRunner.Resources;
 
-public class StudentRepository(Database db): Repository<Student>(db)
+public class StudentRepository: Repository<Student>
 {
+    public StudentRepository(Database db):base(db)
+    {
+        db.InitDb();
+    }
 }

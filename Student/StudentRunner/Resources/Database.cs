@@ -6,6 +6,7 @@ namespace StudentRunner.Resources;
 
 public class Database: DbContext
 {
+    public static bool IsInTesting = false;
     private readonly string _dbConnectionString = "appsettings.json";
     //private readonly string _defaultConnectionString = "DefaultConnectionString";
     private readonly string _postgreConnectionString = "PostgreSqlConnectionString";
@@ -16,13 +17,8 @@ public class Database: DbContext
 
     }
 
-    public Database() : this(new DbContextOptionsBuilder<Database>().Options)
-    {
-
-    }
-
     // only is needed if there isn't configured in program file
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    /*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(Environment.CurrentDirectory, _dbConnectionString))
@@ -30,13 +26,11 @@ public class Database: DbContext
         //optionsBuilder.UseSqlServer(config.GetConnectionString(_defaultConnectionString));
         optionsBuilder.UseNpgsql(config.GetConnectionString(_postgreConnectionString));
         base.OnConfiguring(optionsBuilder);
-    }
+    }*/
 
     public void InitDb()
     {
-        var db = new Database();
-
-        db.Database.EnsureCreated();
+        Database.EnsureCreated();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
