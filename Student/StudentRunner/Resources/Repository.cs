@@ -3,7 +3,7 @@ using StudentRunner.Model;
 
 namespace StudentRunner.Resources;
 
-public class Repository<T>(Database db): IRepository<T> where T : BaseEntity
+public class Repository<T>(Database db): IDisposable, IRepository<T> where T : BaseEntity
 {
     public async Task<IList<T>> GetAll()
     {
@@ -48,5 +48,10 @@ public class Repository<T>(Database db): IRepository<T> where T : BaseEntity
         db.Set<T>().Remove(oldEntity);
 
         return await db.SaveChangesAsync() > 0;
+    }
+
+    public void Dispose()
+    {
+        db.Dispose();
     }
 }

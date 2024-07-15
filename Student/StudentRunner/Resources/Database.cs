@@ -6,10 +6,8 @@ namespace StudentRunner.Resources;
 
 public class Database: DbContext
 {
-    public static bool IsInTesting = false;
-    private readonly string _dbConnectionString = "appsettings.json";
-    //private readonly string _defaultConnectionString = "DefaultConnectionString";
-    private readonly string _postgreConnectionString = "PostgreSqlConnectionString";
+    private const string AppSettingsString = "appsettings.json";
+
     public DbSet<Student> Students { get; set; }
 
     public Database(DbContextOptions<Database> options) : base(options)
@@ -27,6 +25,19 @@ public class Database: DbContext
         optionsBuilder.UseNpgsql(config.GetConnectionString(_postgreConnectionString));
         base.OnConfiguring(optionsBuilder);
     }*/
+
+    public static DbContextOptionsBuilder<Database> GetTestTableConnectionString()
+    {
+        var config = new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(Environment.CurrentDirectory, AppSettingsString))
+            .Build();
+
+        var dbConfig = config["ConnectionStrings:PostgreSqlTestConnectionString"]!;
+
+        var builder = new DbContextOptionsBuilder<Database>();
+        builder.UseNpgsql(dbConfig).EnableSensitiveDataLogging();
+        return builder;
+    }
 
     public void InitDb()
     {
