@@ -32,7 +32,7 @@ public class Database: DbContext
             .AddJsonFile(Path.Combine(Environment.CurrentDirectory, AppSettingsString))
             .Build();
 
-        var dbConfig = config["ConnectionStrings:PostgreSqlTestConnectionString"]!;
+        var dbConfig = config["ConnectionStrings:PostGreSqlTestConnectionString"]!;
 
         var builder = new DbContextOptionsBuilder<Database>();
         builder.UseNpgsql(dbConfig).EnableSensitiveDataLogging();

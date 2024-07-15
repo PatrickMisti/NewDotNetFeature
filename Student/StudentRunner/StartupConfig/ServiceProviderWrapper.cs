@@ -7,7 +7,7 @@ namespace StudentRunner.StartupConfig;
 
 internal static class ServiceProviderWrapper
 {
-    private static readonly string PostgreConnectionString = "PostgreSqlConnectionString";
+    private static readonly string PostGreConnectionString = "PostGreSqlConnectionString";
     public static IServiceCollection AddInnerCommunication(this IServiceCollection cfg, ConfigurationManager manager)
     {
         cfg.AddMassTransit(opt => 
@@ -38,12 +38,12 @@ internal static class ServiceProviderWrapper
 
     public static IServiceCollection AddDatabase(this IServiceCollection cfg, ConfigurationManager manager)
     {
-        cfg.AddSingleton<StudentRepository>();
+        cfg.AddSingleton<IStudentRepository, StudentRepository>();
 
         cfg.AddDbContext<Database>(opt =>
         {
             opt
-                .UseNpgsql(manager.GetConnectionString(PostgreConnectionString))
+                .UseNpgsql(manager.GetConnectionString(PostGreConnectionString))
                 .EnableSensitiveDataLogging();
         });
         

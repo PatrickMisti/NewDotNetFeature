@@ -2,7 +2,7 @@
 
 namespace StudentRunner.Resources;
 
-public class StudentRepository: Repository<Student>
+public class StudentRepository: Repository<Student>, IStudentRepository
 {
     public StudentRepository(Database db):base(db)
     {

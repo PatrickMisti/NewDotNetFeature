@@ -101,7 +101,7 @@ public class StudentController(IStudentService repo, ILogger logger)
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    [Route("delete")]
+    [Route("delete/{id}")]
     public async Task<IResult> DeleteStudent(int id)
     {
         var result = await repo.DeleteStudentAsync(id);

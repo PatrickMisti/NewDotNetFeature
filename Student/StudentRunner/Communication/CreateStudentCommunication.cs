@@ -6,7 +6,7 @@ using ILogger = Serilog.ILogger;
 
 namespace StudentRunner.Communication;
 
-public class CreateStudentCommunication(StudentRepository repo, ILogger logger): IConsumer<CreateStudentMessage>
+public class CreateStudentCommunication(IStudentRepository repo, ILogger logger): IConsumer<CreateStudentMessage>
 {
     public async Task Consume(ConsumeContext<CreateStudentMessage> context)
     {

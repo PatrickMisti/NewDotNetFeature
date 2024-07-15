@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Student\Student.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="CommunicationTests\" />
+  </ItemGroup>
+
 </Project>
