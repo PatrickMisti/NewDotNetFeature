@@ -9,9 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentRunner", "StudentRun
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connectivity", "Connectivity\Connectivity.csproj", "{C82F0279-4AC6-4BEE-B631-091FD3F69134}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{18EB8B77-A7A3-492B-9574-50AB42531231}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Testing", "Testing\Testing.csproj", "{18EB8B77-A7A3-492B-9574-50AB42531231}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{A020DCBF-6EC4-4AE5-8DE0-A7D1EC5882F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{A020DCBF-6EC4-4AE5-8DE0-A7D1EC5882F9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BenchAndTests", "BenchAndTests", "{6C04DD89-7C7A-47D9-86E4-6CFD3F29A1E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +42,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{18EB8B77-A7A3-492B-9574-50AB42531231} = {6C04DD89-7C7A-47D9-86E4-6CFD3F29A1E1}
+		{A020DCBF-6EC4-4AE5-8DE0-A7D1EC5882F9} = {6C04DD89-7C7A-47D9-86E4-6CFD3F29A1E1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B8087CD-DB83-4729-8FDB-C927FFFD60E7}
