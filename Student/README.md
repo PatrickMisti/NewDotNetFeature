@@ -74,10 +74,118 @@ Configuration builder grab db context from appsettings.json
     }
 ```
 
+Or init in startup file
+
+```c#
+cfg.AddDbContext<Database>(opt =>
+{
+    opt
+        .UseNpgsql(manager.GetConnectionString(PostGreConnectionString))
+        .EnableSensitiveDataLogging();
+});
+```
+
 ### Create and Migrate Database ef
 ```bash
 $ dotnet tool install --global dotnet-ef
 $ dotnet add package Microsoft.EntityFrameworkCore.Design
 $ dotnet ef migrations add InitialCreate
 $ dotnet ef database update
+```
+
+## Add Serilog to WebApi and/or Host
+
+```c#
+builder.Host.UseSerilog((context, cfg) =>
+{
+    cfg.ReadFrom.Configuration(context.Configuration);
+});
+```
+
+To read config add Serilog config to appsettings.json
+
+```json
+{
+    "Serilog": {
+        "Using": [ "Serilog.Sinks.Console", "Serilog.Sinks.File" ],
+        "MinimumLevel": {
+            "Default": "Information",
+            "Override": {
+            "Microsoft": "Warning",
+            "System": "Warning"
+            }
+        },
+        "WriteTo": [
+            { "Name": "Console" },
+            {
+                "Name": "File",
+                "Args": {
+                    "path": "Logs/log-development-.txt",
+                    "rollingInterval": "Day",
+                    "rollOnFileSizeLimit": true,
+                    "formatter": "SerilogFormattingCompactCompactJsonFormatte,Serilog.Formatting.Compact" 
+                }
+            }
+        ],
+        "Enrich": [ 
+            "FromLogContext", 
+            "WithMachineName", 
+            "WithProcessId", 
+            "WithThreadId" 
+        ],
+        "Properties": {
+            "Application": "Your ASP.NET Core App",
+            "Environment": "Development"
+        }
+    }
+}
+```
+
+## [Add Masstransit to Project](https://masstransit.io/quick-starts)
+
+AddConsumers() with typof(Program) it scan entiry project with interface IConsumer.
+
+To setup rabbitmq add host, username and password to transit.
+By using Azur or AWS only include Masstransit package and update using.
+
+ConfigureEndpoints() include all sender endoints.
+```c#
+cfg.AddMassTransit(opt =>
+{
+    opt.SetKebabCaseEndpointNameFormatter();
+    opt.AddConsumers(typeof(Program).Assembly);
+
+    opt.UsingRabbitMq((ctx, config) =>
+    {
+        config.Host(manager["Masstransit:Host"], "/", c =>
+        {
+            c.Username(manager["Masstransit:Username"]!);
+            c.Password(manager["Masstransit:Password"]!);
+        });
+
+        config.ConfigureEndpoints(ctx);
+    });
+});
+```
+
+Masstransit config should be included in appsettings.json
+
+```json
+{
+    "Masstransit": {
+        "Host": "localhost",
+        "Username": "guest",
+        "Password": "guest"
+    }
+}
+```
+
+
+Benchmark
+- only runs by running webapp
+
+#### Before running application start docker file
+
+```bash
+$ docker-compose up
 ```
