@@ -66,8 +66,8 @@ internal static class ServiceProviderWrapper
                 name: "Rabbit MQ",
                 failureStatus: HealthStatus.Unhealthy)
             .AddCheck<MemoryHealthCheck>(
-                "Feedback Service Memory Check", 
-                failureStatus: HealthStatus.Unhealthy, 
+                "Feedback Service Memory Check",
+                failureStatus: HealthStatus.Unhealthy,
                 tags: ["Feedback Service"]);
 
 
