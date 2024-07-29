@@ -69,7 +69,7 @@ public static class ConfigExtensions
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
-        app.UseOpenTelemetryPrometheusScrapingEndpoint();
+        //app.UseOpenTelemetryPrometheusScrapingEndpoint();
         app.MapPrometheusScrapingEndpoint();
 
         return app;
