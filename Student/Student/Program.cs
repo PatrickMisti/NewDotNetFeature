@@ -1,9 +1,10 @@
+using Connectivity.StartupExtensions;
 using Serilog;
 using Student.StartupConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Console.Title = builder.Configuration["ConsoleTitle"] ?? "Api";
+builder.AddServiceDefaults();
 
 builder.Host.UseSerilog((context, cfg) =>
 {
