@@ -1,5 +1,8 @@
 ﻿using Connectivity.Configuration;
 using MassTransit;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using RabbitMQ.Client;
+using Student.Health;
 using Student.Services;
 
 namespace Student.StartupConfig;
@@ -40,6 +43,42 @@ internal static class ServiceProviderWrapper
         cfg.AddControllers();
         cfg.AddEndpointsApiExplorer();
         cfg.AddSwaggerGen();
+
+        return cfg;
+    }
+
+    public static IServiceCollection AddHealthyCheck(this IServiceCollection cfg, ConfigurationManager manager)
+    {
+        var massUser = manager["Masstransit:Username"];
+        var massPass = manager["Masstransit:Password"];
+        var massHost = manager["Masstransit:Host"];
+
+        cfg
+            .AddHealthChecks()
+            .AddNpgSql(
+                manager.GetConnectionString("PostGreSqlConnectionString")!,
+                healthQuery: "select 1",
+                name: "PostGre Server",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["Feedback", "Database"])
+            .AddRabbitMQ(
+                rabbitConnectionString: $"amqp://{massUser}:{massPass}@{massHost}:5672",
+                name: "Rabbit MQ",
+                failureStatus: HealthStatus.Unhealthy)
+            .AddCheck<MemoryHealthCheck>(
+                "Feedback Service Memory Check", 
+                failureStatus: HealthStatus.Unhealthy, 
+                tags: ["Feedback Service"]);
+
+
+        cfg.AddHealthChecksUI(opt =>
+        {
+            opt.SetEvaluationTimeInSeconds(10);                                      // time in seconds between check    
+            opt.MaximumHistoryEntriesPerEndpoint(60);                                // maximum history of checks 
+            opt.SetApiMaxActiveRequests(1);                                          // api requests concurrency    
+            opt.AddHealthCheckEndpoint("feedback api", "/api/health");      // map health check api    
+        })
+            .AddInMemoryStorage();
 
         return cfg;
     }

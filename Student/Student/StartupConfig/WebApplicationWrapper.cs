@@ -1,4 +1,7 @@
-﻿using Serilog;
+﻿using HealthChecks.UI.Client;
+using HealthChecks.UI.Configuration;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Serilog;
 
 namespace Student.StartupConfig;
 
@@ -22,5 +25,22 @@ internal static class WebApplicationWrapper
         app.MapControllers();
 
         return app;
-    } 
+    }
+
+    public static WebApplication AddHealthyCheck(this WebApplication app)
+    {
+        app.MapHealthChecks("/api/health", new HealthCheckOptions
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        app.MapHealthChecksUI(delegate(Options options)
+        {
+            options.UIPath = "/healthcheck-ui";
+            options.AddCustomStylesheet("./Health/customHealthUi.css");
+        });
+
+        return app;
+    }
 }

@@ -11,10 +11,13 @@ builder.Host.UseSerilog((context, cfg) =>
 builder.Services
     .AddInnerCommunication(builder.Configuration)
     .AddScopedCollection()
-    .AddEndpointHub();
+    .AddEndpointHub()
+    .AddHealthyCheck(builder.Configuration);
 
 var app = builder.Build();
 
-app.AddDefaultConfig();
+app
+    .AddDefaultConfig()
+    .AddHealthyCheck();
 
 app.Run();
