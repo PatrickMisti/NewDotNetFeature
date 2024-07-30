@@ -1,10 +1,9 @@
-using Connectivity.StartupExtensions;
 using Serilog;
 using Student.StartupConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
+//builder.AddServiceDefaults();
 
 builder.Host.UseSerilog((context, cfg) =>
 {

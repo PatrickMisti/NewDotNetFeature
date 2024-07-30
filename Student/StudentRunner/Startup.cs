@@ -1,9 +1,8 @@
-﻿using Connectivity.StartupExtensions;
-using StudentRunner.StartupConfig;
+﻿using StudentRunner.StartupConfig;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.AddServiceDefaults();
+//builder.AddServiceDefaults();
 
 builder.Services
     .AddInnerCommunication(builder.Configuration)
