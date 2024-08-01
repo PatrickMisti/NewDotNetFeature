@@ -1,5 +1,4 @@
-﻿using Connectivity.StartupExtensions;
-using HealthChecks.UI.Client;
+﻿using HealthChecks.UI.Client;
 using HealthChecks.UI.Configuration;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
@@ -24,8 +23,6 @@ internal static class WebApplicationWrapper
         app.UseAuthorization();
 
         app.MapControllers();
-
-        app.MapDefaultEndpoints();
 
         return app;
     }
