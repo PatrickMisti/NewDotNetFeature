@@ -1,6 +1,7 @@
 ﻿using Connectivity.Configuration;
 using MassTransit;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using RabbitMQ.Client;
 using Student.Health;
 using Student.Services;
 

@@ -3,7 +3,7 @@ using Student.StartupConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//builder.AddServiceDefaults();
+Console.Title = builder.Configuration["ConsoleTitle"] ?? "Api";
 
 builder.Host.UseSerilog((context, cfg) =>
 {

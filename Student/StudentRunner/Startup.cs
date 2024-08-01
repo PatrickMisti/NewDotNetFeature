@@ -1,8 +1,8 @@
-﻿using StudentRunner.StartupConfig;
+using StudentRunner.StartupConfig;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-//builder.AddServiceDefaults();
+Console.Title = builder.Configuration["ConsoleTitle"] ?? "Runner";
 
 builder.Services
     .AddInnerCommunication(builder.Configuration)
