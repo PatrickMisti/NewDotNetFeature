@@ -19,7 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{658B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{C329DF66-E2E0-4B4C-97F3-2C04A101EFC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentView", "StudentView\StudentView.csproj", "{F055761D-44E5-49E0-B08B-6A88473379E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentView", "StudentView\StudentView.csproj", "{F055761D-44E5-49E0-B08B-6A88473379E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

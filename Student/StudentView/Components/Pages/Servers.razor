@@ -9,7 +9,7 @@
     @server.ServerName is in @server.City @(server.IsOffline ? "Offline": "Online")
 </div>
 
-<button class="btn btn-primary" @onclick="(() => server.IsOffline = !server.IsOffline)">Change Server</button>
+<button class="btn btn-primary test" @onclick="(() => server.IsOffline = !server.IsOffline)">Change Server</button>
 
 @code {
     private string status = "Server is offline";

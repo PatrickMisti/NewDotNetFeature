@@ -1,5 +1,5 @@
 ﻿@page "/students"
-@using Student.Dtos
+@using StudentView.Models
 @inject HttpClient client
 
 <h3>Students</h3>
@@ -18,11 +18,11 @@
 
 
 @code {
-    StudentDto[]? students = [];
+    Student[]? students = [];
     bool hasError = false;
 
     protected override async Task OnInitializedAsync()
     {
-        students = await client.GetFromJsonAsync<StudentDto[]>("all");
+        students = await client.GetFromJsonAsync<Student[]>("all");
     }
 }

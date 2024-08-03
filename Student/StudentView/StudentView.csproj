@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Student\Student.csproj" />
+    <None Remove="Components\Pages\Servers.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Components\Pages\Servers.razor.css" />
   </ItemGroup>
 
 </Project>
