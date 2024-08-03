@@ -1,13 +1,18 @@
-using MatBlazor;
 using StudentView.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+Console.Title = "WebClient";
 
-builder.Services.AddMatBlazor();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient();
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(builder.Configuration["ConnectionToServer"]!)
+});
 
 var app = builder.Build();
 

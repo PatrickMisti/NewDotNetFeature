@@ -1,0 +1,28 @@
+﻿@page "/students"
+@using Student.Dtos
+@inject HttpClient client
+
+<h3>Students</h3>
+
+@if (hasError)
+{
+    <p>Loading failed!!!</p>
+}
+
+<ul>
+    @foreach (var item in students)
+    {
+        <li>@item.FirstName</li>
+    }
+</ul>
+
+
+@code {
+    StudentDto[]? students = [];
+    bool hasError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        students = await client.GetFromJsonAsync<StudentDto[]>("all");
+    }
+}
