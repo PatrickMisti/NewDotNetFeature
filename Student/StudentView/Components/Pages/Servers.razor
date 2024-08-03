@@ -3,7 +3,7 @@
 
 <h3>Servers</h3>
 
-
+<p>@status</p>
 
 <div data-name="@server.ServerName" data-status="Server is @(server.IsOffline ? "Offline":"Online")" style="color: @(server.IsOffline ? "red" : "green")">
     @server.ServerName is in @server.City @(server.IsOffline ? "Offline": "Online")
@@ -11,9 +11,14 @@
 
 <button class="btn btn-primary test" @onclick="(() => server.IsOffline = !server.IsOffline)">Change Server</button>
 
+<MudButton Variant="Variant.Outlined" OnClick="Test">Test @TestButton</MudButton>
+
 @code {
     private string status = "Server is offline";
     private Server server = new() { City = "Toronto", IsOffline = true, ServerName = "Server 1" };
-
-
+    string TestButton = "";
+    void Test()
+    {
+        TestButton += "hello";
+    }
 }

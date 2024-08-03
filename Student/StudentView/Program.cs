@@ -1,3 +1,4 @@
+using MudBlazor.Services;
 using StudentView.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,8 @@ Console.Title = "WebClient";
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped(sp => new HttpClient

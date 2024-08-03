@@ -18,11 +18,11 @@
 
 
 @code {
-    Student[]? students = [];
+    Student[] students = [];
     bool hasError = false;
 
     protected override async Task OnInitializedAsync()
     {
-        students = await client.GetFromJsonAsync<Student[]>("all");
+        students = await client.GetFromJsonAsync<Student[]>("all") ?? [];
     }
 }

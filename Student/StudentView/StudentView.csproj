@@ -14,4 +14,8 @@
     <Content Include="Components\Pages\Servers.razor.css" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="7.5.0" />
+  </ItemGroup>
+
 </Project>
