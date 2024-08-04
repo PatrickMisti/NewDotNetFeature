@@ -3,10 +3,10 @@
 public class Student
 {
     public int Id { get; set; } = default;
-    public required string FirstName { get; set; }
-    public required string LastName { get; set; }
-    public DateTime Birthday { get; set; }
-    public int Classroom { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public DateTime Birthday { get; set; } = default;
+    public int Classroom { get; set; } = 0;
 
     public Student() {}
 

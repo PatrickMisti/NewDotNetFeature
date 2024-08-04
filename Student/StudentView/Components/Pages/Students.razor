@@ -1,5 +1,6 @@
 ﻿@page "/students"
 @using StudentView.Models
+@using StudentView.Services
 @inject HttpClient client
 
 <h3>Students</h3>
@@ -10,10 +11,20 @@
 }
 
 <ul>
-    @foreach (var item in students)
-    {
-        <li>@item.FirstName</li>
-    }
+    <MudDataGrid Items="students" Filterable="false" SortMode="SortMode.None" Groupable="false">
+        <Columns>
+            <PropertyColumn Property="s => s.Id" Title="Identity"></PropertyColumn>
+            <PropertyColumn Property="s => s.FirstName" Title="Firstname"></PropertyColumn>
+            <PropertyColumn Property="s => s.LastName" Title="Lastname"></PropertyColumn>
+            <PropertyColumn Property="s => s.Birthday" Title="Birthday"></PropertyColumn>
+            <PropertyColumn Property="s => s.Classroom" Title="Classroom"></PropertyColumn>
+            <TemplateColumn CellClass="d-flex justify-end" >
+                <CellTemplate>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Primary" Href="@("/students/"+@context.Item.Id)"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
 </ul>
 
 
@@ -23,6 +34,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        students = await client.GetFromJsonAsync<Student[]>("all") ?? [];
+        try
+        {
+            students = MockStudentService.GetAllStudent().ToArray();
+            //students = await client.GetFromJsonAsync<Student[]>("all") ?? [];
+        }
+        catch
+        {
+            hasError = true;
+            students = MockStudentService.GetAllStudent().ToArray();
+        }
     }
 }

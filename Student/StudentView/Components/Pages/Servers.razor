@@ -1,5 +1,6 @@
 ﻿@page "/servers"
 @using StudentView.Models
+@rendermode InteractiveServer
 
 <h3>Servers</h3>
 
@@ -9,9 +10,12 @@
     @server.ServerName is in @server.City @(server.IsOffline ? "Offline": "Online")
 </div>
 
-<button class="btn btn-primary test" @onclick="(() => server.IsOffline = !server.IsOffline)">Change Server</button>
+<div class="row w-25">
+    <button class="btn btn-primary test" @onclick="(() => server.IsOffline = !server.IsOffline)">Change Server</button>
 
-<MudButton Variant="Variant.Outlined" OnClick="Test">Test @TestButton</MudButton>
+    <MudButton Variant="Variant.Outlined" OnClick="Test">Test @TestButton</MudButton>
+</div>
+
 
 @code {
     private string status = "Server is offline";

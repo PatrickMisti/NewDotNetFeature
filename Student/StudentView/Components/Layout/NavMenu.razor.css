@@ -46,6 +46,20 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-list-nested' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M4.5 11.5A.5.5 0 0 1 5 11h10a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 1 3h10a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z'/%3E%3C/svg%3E");
 }
 
+.bi-4-square-nav-menu {
+    filter: invert(100%);
+    width: 16px;
+    height: 16px;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktNC1zcXVhcmUiIHZpZXdCb3g9IjAgMCAxNiAxNiI+CiAgPHBhdGggZD0iTTcuNTE5IDUuMDU3cS4zMy0uNTI3LjY1Ny0xLjA1NWgxLjkzM3Y1LjMzMmgxLjAwOHYxLjEwN0gxMC4xMVYxMkg4Ljg1di0xLjU1OUg0Ljk3OFY5LjMyMmMuNzctMS40MjcgMS42NTYtMi44NDcgMi41NDItNC4yNjVaTTYuMjI1IDkuMjgxdi4wNTNIOC44NVY1LjA2M2gtLjA2NWMtLjg2NyAxLjMzLTEuNzg3IDIuODA2LTIuNTYgNC4yMTgiLz4KICA8cGF0aCBkPSJNMCAyYTIgMiAwIDAgMSAyLTJoMTJhMiAyIDAgMCAxIDIgMnYxMmEyIDIgMCAwIDEtMiAySDJhMiAyIDAgMCAxLTItMnptMTUgMGExIDEgMCAwIDAtMS0xSDJhMSAxIDAgMCAwLTEgMXYxMmExIDEgMCAwIDAgMSAxaDEyYTEgMSAwIDAgMCAxLTF6Ii8+Cjwvc3ZnPg==);
+}
+
+.bi-5-square-nav-menu {
+    filter: invert(100%);
+    width: 16px;
+    height: 16px;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktNS1zcXVhcmUiIHZpZXdCb3g9IjAgMCAxNiAxNiI+CiAgPHBhdGggZD0iTTcuOTk0IDEyLjE1OGMtMS41NyAwLTIuNjU0LS45MDItMi43MTktMi4xMTVoMS4yMzdjLjE0LjcyLjgzMiAxLjAzMSAxLjUyOSAxLjAzMS43OTEgMCAxLjU3LS41OTcgMS41Ny0xLjY4MSAwLS45NjctLjczMi0xLjU3LTEuNTgyLTEuNTctLjc2NyAwLTEuMjQyLjQ1LTEuNDM1LjgwOEg1LjQ0NUw1Ljc5MSA0aDQuNzA1djEuMTAzSDYuODc1bC0uMTkzIDIuMzQzaC4wNjRjLjE3LS4yNTguNzE1LS42OCAxLjYxMS0uNjggMS4zODMgMCAyLjU2MS45NDQgMi41NjEgMi41ODUgMCAxLjY4Ny0xLjE4NCAyLjgwNi0yLjkyNCAyLjgwNloiLz4KICA8cGF0aCBkPSJNMCAyYTIgMiAwIDAgMSAyLTJoMTJhMiAyIDAgMCAxIDIgMnYxMmEyIDIgMCAwIDEtMiAySDJhMiAyIDAgMCAxLTItMnptMTUgMGExIDEgMCAwIDAtMS0xSDJhMSAxIDAgMCAwLTEgMXYxMmExIDEgMCAwIDAgMSAxaDEyYTEgMSAwIDAgMCAxLTF6Ii8+Cjwvc3ZnPg==);
+}
+
 .nav-item {
     font-size: 0.9rem;
     padding-bottom: 0.5rem;

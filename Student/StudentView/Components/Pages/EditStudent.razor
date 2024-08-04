@@ -1,0 +1,40 @@
+﻿@page "/students/{id:int}"
+@using StudentView.Models
+@using StudentView.Services
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+
+<h3>EditStudent</h3>
+<p>@Id</p>
+<br />
+<br />
+
+
+<MudCard>
+    <MudForm Model="_student" @ref="@form">
+        <MudCardContent>
+            <MudTextField @bind-Value="_student!.FirstName" Label="FirstName"></MudTextField>
+            <MudTextField @bind-Value="_student!.LastName" Label="Surename"></MudTextField>
+            <MudTextField @bind-Value="_student!.Classroom" Label="Classroom"></MudTextField>
+            <MudDatePicker @bind-Value="_student!.Birthday" Label="Birthday"></MudDatePicker>
+        </MudCardContent>
+    </MudForm>
+</MudCard>
+<MudButton Variant="Variant.Filled" Href="/students">Close</MudButton>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    MudForm form;
+
+    Student? _student;
+
+    protected override void OnParametersSet()
+    {
+        _student = MockStudentService.GetStudentById(Id);
+        if (_student is null)
+            NavManager.NavigateTo("/students");
+    }
+
+}
