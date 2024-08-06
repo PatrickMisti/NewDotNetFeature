@@ -1,9 +1,35 @@
 ﻿@page "/students/create"
+@using StudentView.Models
 
 <h3>CreateStudent</h3>
-
-<p>Hello</p>
+<br />
+<br />
+<div class="d-flex justify-content-center flex-column">
+    <MudPaper Class="pa-8 w-50">
+        <MudForm @ref="@_form" Model="_model">
+            <MudTextField @bind-Value="_model.FirstName" T="string" Label="FirstName" Variant="Variant.Text"></MudTextField>
+            <MudTextField @bind-Value="_model.LastName" T="string" Label="LastName" Variant="Variant.Text"></MudTextField>
+            <MudDatePicker @bind-Value="_model.Birthday" Variant="Variant.Text" Date="DateTime.Today"></MudDatePicker>
+            <MudNumericField @bind-Value="_model.Classroom" Label="Classroom" Min="0" Max="10"></MudNumericField>
+        </MudForm>
+    </MudPaper>
+    <br/>
+    <MudPaper Class="pa-8 w-50">
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mx-2" Href="/students">Close</MudButton>
+        <MudButton Variant="Variant.Filled" OnClick="AddStudent">Create</MudButton>
+    </MudPaper>
+</div>
 
 @code {
+    Student _model = new();
 
+    MudForm _form = new();
+
+    void AddStudent()
+    {
+        if (_form.IsValid)
+        {
+            Console.WriteLine("Create");
+        }
+    }
 }
