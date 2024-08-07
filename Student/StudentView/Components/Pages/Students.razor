@@ -1,7 +1,8 @@
 ﻿@page "/students"
 @using StudentView.Models
 @using StudentView.Services
-@inject HttpClient client
+@inject HttpClient Client
+@inject ISnackbar SnackBar
 
 <h3>Students</h3>
 
@@ -9,35 +10,38 @@
 {
     <p>Loading failed!!!</p>
 }
+@else 
+{
+    <div>
+        <MudDataGrid Items="students" Filterable="false" SortMode="SortMode.None" Groupable="false">
+            <Columns>
+                <PropertyColumn Property="s => s.Id" Title="Identity"></PropertyColumn>
+                <PropertyColumn Property="s => s.FirstName" Title="Firstname"></PropertyColumn>
+                <PropertyColumn Property="s => s.LastName" Title="Lastname"></PropertyColumn>
+                <PropertyColumn Property="s => s.Birthday" Title="Birthday"></PropertyColumn>
+                <PropertyColumn Property="s => s.Classroom" Title="Classroom"></PropertyColumn>
+                <TemplateColumn CellClass="d-flex justify-end" >
+                    <CellTemplate>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                       Variant="Variant.Outlined" 
+                                       Color="Color.Secondary" 
+                                       Class="mr-2"
+                                       OnClick="async () => await DeleteStudent(@context.Item.Id)"/>
 
-<div>
-    <MudDataGrid Items="students" Filterable="false" SortMode="SortMode.None" Groupable="false">
-        <Columns>
-            <PropertyColumn Property="s => s.Id" Title="Identity"></PropertyColumn>
-            <PropertyColumn Property="s => s.FirstName" Title="Firstname"></PropertyColumn>
-            <PropertyColumn Property="s => s.LastName" Title="Lastname"></PropertyColumn>
-            <PropertyColumn Property="s => s.Birthday" Title="Birthday"></PropertyColumn>
-            <PropertyColumn Property="s => s.Classroom" Title="Classroom"></PropertyColumn>
-            <TemplateColumn CellClass="d-flex justify-end" >
-                <CellTemplate>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                   Variant="Variant.Outlined" 
-                                   Color="Color.Secondary" 
-                                   Class="mr-2"
-                                   OnClick="() => DeleteStudent(@context.Item.Id)"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                       Variant="Variant.Outlined" 
+                                       Color="Color.Primary" 
+                                       Href="@("/students/"+@context.Item.Id)" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </div>
+    <div class="d-flex justify-content-end">
+        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="/students/create" />
+    </div>
+}
 
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                                   Variant="Variant.Outlined" 
-                                   Color="Color.Primary" 
-                                   Href="@("/students/"+@context.Item.Id)" />
-                </CellTemplate>
-            </TemplateColumn>
-        </Columns>
-    </MudDataGrid>
-</div>
-<div class="d-flex justify-content-end">
-    <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="/students/create" />
-</div>
 
 @code {
     Student[] students = [];
@@ -48,17 +52,31 @@
         try
         {
             students = MockStudentService.GetAllStudent().ToArray();
-            //students = await client.GetFromJsonAsync<Student[]>("all") ?? [];
+            students = await Client.GetFromJsonAsync<Student[]>("all") ?? [];
+            /*students = MockStudentService.GetAllStudent().ToArray();*/ // todo mock data
         }
         catch
         {
             hasError = true;
-            students = MockStudentService.GetAllStudent().ToArray();
+            SnackBar.Add("Could not load Data maybe Server is down!!", Severity.Error);
         }
     }
 
-    void DeleteStudent(int id)
+    async Task DeleteStudent(int? id)
     {
-        Console.WriteLine("DeleteId :" + id);
+        if (id == null)
+            return;
+
+        try
+        {
+            var response = await Client.DeleteFromJsonAsync<bool>($"delete/{id}");
+
+            if (!response)
+                SnackBar.Add("Could not delete student!", Severity.Error);
+        }
+        catch (Exception e)
+        {
+            SnackBar.Add("Server is maybe down!" + e.Message, Severity.Error);
+        }
     }
 }

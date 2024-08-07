@@ -2,6 +2,8 @@
 @using StudentView.Models
 @using StudentView.Services
 @inject NavigationManager NavManager
+@inject ISnackbar SnackBar
+@inject HttpClient Client
 
 
 <h3>EditStudent</h3>
@@ -28,7 +30,7 @@
 </div>
 <div class="d-flex m-5 justify-content-end">
     <MudButton Variant="Variant.Filled" Href="/students">Close</MudButton>
-    <MudButton Variant="Variant.Filled" OnClick="Update">Save</MudButton>
+    <MudButton Variant="Variant.Filled" OnClick="async () => await Update">Save</MudButton>
 </div>
 
 
@@ -48,13 +50,26 @@
             NavManager.NavigateTo("/students");
     }
 
-    void Update()
+    async Task Update()
     {
-        if (_form.IsValid)
+        if (!_form.IsValid)
         {
-            // Todo make update
+            SnackBar.Add("Form is invalid", Severity.Warning);
+            return;
         }
 
-        Console.WriteLine("Update");
+        try
+        {
+            var response = await Client.PutAsJsonAsync("update", _student);
+
+            if (response.IsSuccessStatusCode)
+                NavManager.NavigateTo("/students");
+
+            SnackBar.Add("Could not update student: " + response.RequestMessage, Severity.Error);
+        }
+        catch (Exception e)
+        {
+            SnackBar.Add("Server is maybe down!" + e.Message, Severity.Error);
+        }
     }
 }

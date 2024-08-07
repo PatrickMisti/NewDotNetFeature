@@ -1,5 +1,8 @@
 ﻿@page "/students/create"
 @using StudentView.Models
+@inject ISnackbar SnackBar
+@inject HttpClient Client
+@inject NavigationManager NavManager
 
 <h3>CreateStudent</h3>
 <br />
@@ -44,7 +47,7 @@
     <br/>
     <MudPaper Class="pa-8 w-50">
         <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mx-2" Href="/students">Close</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!success" OnClick="AddStudent">Create</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!success" OnClick="async() => await AddStudent">Create</MudButton>
     </MudPaper>
 </div>
 
@@ -55,11 +58,26 @@
 
     MudForm _form = new();
 
-    void AddStudent()
+    async Task AddStudent()
     {
         if (!_form.IsValid)
+        {
+            SnackBar.Add("Form is invalid", Severity.Warning);
             return;
+        }
 
+        try
+        {
+            var response = await Client.PostAsJsonAsync("create", _model);
 
+            if (response.IsSuccessStatusCode)
+                NavManager.NavigateTo("/students");
+
+            SnackBar.Add("Could not save student :" + response.RequestMessage, Severity.Error);
+        }
+        catch (Exception e)
+        {
+            SnackBar.Add("Server is maybe down!" + e.Message, Severity.Error);
+        }
     }
 }
