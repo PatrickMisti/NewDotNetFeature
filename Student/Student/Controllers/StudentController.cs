@@ -98,7 +98,7 @@ public class StudentController(IStudentService repo, ILogger logger)
 
     [HttpDelete]
     [Consumes(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [Route("delete/{id}")]
@@ -107,7 +107,7 @@ public class StudentController(IStudentService repo, ILogger logger)
         var result = await repo.DeleteStudentAsync(id);
 
         var response = result.Match(
-            right => Results.Accepted(),
+            right => Results.Ok(),
             failed => Results.BadRequest(),
             err => 
             {

@@ -1,6 +1,7 @@
 ﻿@page "/students"
+@using Microsoft.AspNetCore.Mvc
+@using MudBlazor.Extensions
 @using StudentView.Models
-@using StudentView.Services
 @inject HttpClient Client
 @inject ISnackbar SnackBar
 
@@ -26,7 +27,7 @@ else
                                        Variant="Variant.Outlined" 
                                        Color="Color.Secondary" 
                                        Class="mr-2"
-                                       OnClick="@(async () => await DeleteStudent(@context.Item.Id))"/>
+                                       OnClick="@(async () => await DeleteStudent(context.Item.Id))"/>
 
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                        Variant="Variant.Outlined" 
@@ -44,15 +45,14 @@ else
 
 
 @code {
-    Student[] students = [];
+    List<Student> students = [];
     bool hasError = false;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            students = await Client.GetFromJsonAsync<Student[]>("all") ?? [];
-            /*students = MockStudentService.GetAllStudent().ToArray();*/ // todo mock data
+            students = await Client.GetFromJsonAsync<List<Student>>("all") ?? [];
         }
         catch
         {
@@ -68,14 +68,20 @@ else
 
         try
         {
-            var response = await Client.DeleteFromJsonAsync<bool>($"delete/{id}");
+            var response = await Client.DeleteAsync($"delete/{id}");
 
-            if (!response)
-                SnackBar.Add("Could not delete student!", Severity.Error);
+            if (!response.IsSuccessStatusCode)
+            {
+                SnackBar.Add("Could not delete student!" + response.StatusCode, Severity.Error);
+                return;
+            }
+            var s = students.FirstOrDefault(p => p.Id == id);
+            students.Remove(s);
         }
         catch (Exception e)
         {
             SnackBar.Add("Server is maybe down!" + e.Message, Severity.Error);
+            Console.WriteLine(e.Message);
         }
     }
 }

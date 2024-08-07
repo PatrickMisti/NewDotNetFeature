@@ -1,6 +1,6 @@
 ﻿@page "/students/{id:int}"
+@using System.Text.Json
 @using StudentView.Models
-@using StudentView.Services
 @inject NavigationManager NavManager
 @inject ISnackbar SnackBar
 @inject HttpClient Client
@@ -41,13 +41,22 @@
 
     MudForm _form = new ();
 
-    Student? _student;
+    Student? _student = new();
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        _student = MockStudentService.GetStudentById(Id);
-        if (_student is null)
-            NavManager.NavigateTo("/students");
+        try
+        {
+            var result = await (await Client.PutAsJsonAsync<Student>($"byId/{Id}", null)).Content.ReadAsStringAsync();
+            _student = JsonSerializer.Deserialize<Student>(result, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (_student is null)
+                NavManager.NavigateTo("/students");
+        }
+        catch (Exception e)
+        {
+            SnackBar.Add("Could not find student!", Severity.Warning);
+        }
     }
 
     async Task Update()
@@ -63,7 +72,11 @@
             var response = await Client.PutAsJsonAsync("update", _student);
 
             if (response.IsSuccessStatusCode)
+            {
                 NavManager.NavigateTo("/students");
+                return;
+            }
+                
 
             SnackBar.Add("Could not update student: " + response.RequestMessage, Severity.Error);
         }

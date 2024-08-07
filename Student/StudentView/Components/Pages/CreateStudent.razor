@@ -69,12 +69,14 @@
 
         try
         {
-            var jsonStudent = JsonSerializer.Serialize(_model);
-            Console.WriteLine("Http Post: create Payload:", jsonStudent);
-            var response = await Client.PostAsJsonAsync("create", jsonStudent);
+            var response = await Client.PostAsJsonAsync("create", _model);
 
             if (response.IsSuccessStatusCode)
+            {
                 NavManager.NavigateTo("/students");
+                return;
+            }
+                
 
             SnackBar.Add("Could not save student :" + response.RequestMessage, Severity.Error);
         }

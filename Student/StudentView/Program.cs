@@ -9,6 +9,7 @@ Console.Title = "WebClient";
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddLogging();
 builder.Services.AddMudServices();
 
 builder.Services.AddHttpClient();
