@@ -5,7 +5,7 @@ public class Student
     public int Id { get; set; } = default;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public DateTime? Birthday { get; set; } = default;
+    public DateTime? Birthday { get; set; } = DateTime.Today;
     public int Classroom { get; set; } = 0;
 
     public Student() {}

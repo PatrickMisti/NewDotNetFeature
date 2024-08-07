@@ -1,4 +1,5 @@
 ﻿@page "/students/create"
+@using System.Text.Json
 @using StudentView.Models
 @inject ISnackbar SnackBar
 @inject HttpClient Client
@@ -47,7 +48,7 @@
     <br/>
     <MudPaper Class="pa-8 w-50">
         <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="mx-2" Href="/students">Close</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!success" OnClick="async() => await AddStudent">Create</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!success" OnClick="@(async() => await AddStudent())">Create</MudButton>
     </MudPaper>
 </div>
 
@@ -68,7 +69,9 @@
 
         try
         {
-            var response = await Client.PostAsJsonAsync("create", _model);
+            var jsonStudent = JsonSerializer.Serialize(_model);
+            Console.WriteLine("Http Post: create Payload:", jsonStudent);
+            var response = await Client.PostAsJsonAsync("create", jsonStudent);
 
             if (response.IsSuccessStatusCode)
                 NavManager.NavigateTo("/students");

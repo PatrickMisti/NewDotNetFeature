@@ -10,7 +10,7 @@
 {
     <p>Loading failed!!!</p>
 }
-@else 
+else 
 {
     <div>
         <MudDataGrid Items="students" Filterable="false" SortMode="SortMode.None" Groupable="false">
@@ -26,7 +26,7 @@
                                        Variant="Variant.Outlined" 
                                        Color="Color.Secondary" 
                                        Class="mr-2"
-                                       OnClick="async () => await DeleteStudent(@context.Item.Id)"/>
+                                       OnClick="@(async () => await DeleteStudent(@context.Item.Id))"/>
 
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                        Variant="Variant.Outlined" 
@@ -51,7 +51,6 @@
     {
         try
         {
-            students = MockStudentService.GetAllStudent().ToArray();
             students = await Client.GetFromJsonAsync<Student[]>("all") ?? [];
             /*students = MockStudentService.GetAllStudent().ToArray();*/ // todo mock data
         }
