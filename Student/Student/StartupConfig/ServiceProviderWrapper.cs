@@ -69,7 +69,7 @@ internal static class ServiceProviderWrapper
                 "Feedback Service Memory Check",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: ["Feedback Service"]);
-
+#if DEBUG
 
         cfg.AddHealthChecksUI(opt =>
         {
@@ -79,6 +79,7 @@ internal static class ServiceProviderWrapper
             opt.AddHealthCheckEndpoint("feedback api", "/api/health");      // map health check api    
         })
             .AddInMemoryStorage();
+#endif
 
         return cfg;
     }
