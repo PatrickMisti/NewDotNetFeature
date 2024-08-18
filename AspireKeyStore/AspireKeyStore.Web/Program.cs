@@ -1,3 +1,4 @@
+using AspireKeyStore.ServiceDefaults;
 using AspireKeyStore.Web;
 using AspireKeyStore.Web.Components;
 
