@@ -1,9 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiService = builder.AddProject<Projects.AspireKeyStore_ApiService>("apiservice");
+var db = builder
+    .AddPostgres("postgres")
+    .WithPgWeb()
+    .AddDatabase("keystoreDb");
 
-builder.AddProject<Projects.AspireKeyStore_Web>("webfrontend")
-    .WithExternalHttpEndpoints()
-    .WithReference(apiService);
+builder.AddProject<Projects.KeyStoreApi>("keystoreapi")
+    .WithReference(db);
 
 builder.Build().Run();

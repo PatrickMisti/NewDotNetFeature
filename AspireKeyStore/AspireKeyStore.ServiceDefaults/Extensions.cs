@@ -2,14 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Serilog;
 
-namespace AspireKeyStore.ServiceDefaults;
+namespace Microsoft.Extensions.Hosting;
 
 // Adds common .NET Aspire services: service discovery, resilience, health checks, and OpenTelemetry.
 // This project should be referenced by each service project in your solution.
@@ -21,8 +19,6 @@ public static class Extensions
         builder.ConfigureOpenTelemetry();
 
         builder.AddDefaultHealthChecks();
-
-        builder.AddSerilogToExport();
 
         builder.Services.AddServiceDiscovery();
 
@@ -82,50 +78,6 @@ public static class Extensions
         //       .UseAzureMonitor();
         //}
 
-        return builder;
-    }
-
-    private static IHostApplicationBuilder AddSerilogToExport(this IHostApplicationBuilder builder)
-    {
-        var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
-
-        var logBuilder = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
-
-        if (useOtlpExporter)
-        {
-            logBuilder
-                .WriteTo.OpenTelemetry(options =>
-                {
-                    options.Endpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
-                    var headers = builder.Configuration["OTEL_EXPORTER_OTLP_HEADERS"]?.Split(',') ?? [];
-                    foreach (var header in headers)
-                    {
-                        var (key, value) = header.Split('=') switch
-                        {
-                            [{ } k, { } v] => (k, v),
-                            var v => throw new Exception($"Invalid header format {v}")
-                        };
-
-                        options.Headers.Add(key, value);
-                    }
-
-                    options.ResourceAttributes.Add("service.name", "apiservice");
-
-                    //To remove the duplicate issue, we can use the below code to get the key and value from the configuration
-
-                    var (otelResourceAttribute, otelResourceAttributeValue) = builder.Configuration["OTEL_RESOURCE_ATTRIBUTES"]?.Split('=') switch
-                    {
-                        [{ } k, { } v] => (k, v),
-                        _ => throw new Exception($"Invalid header format {builder.Configuration["OTEL_RESOURCE_ATTRIBUTES"]}")
-                    };
-
-                    options.ResourceAttributes.Add(otelResourceAttribute, otelResourceAttributeValue);
-                });
-        }
-
-        Log.Logger = logBuilder.CreateBootstrapLogger();
-
-        builder.Logging.AddSerilog();
         return builder;
     }
 
