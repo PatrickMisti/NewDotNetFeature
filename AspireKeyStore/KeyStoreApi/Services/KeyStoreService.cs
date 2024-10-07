@@ -1,48 +1,114 @@
 ﻿using KeyStoreApi.Models;
 using KeyStoreApi.Persistence;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace KeyStoreApi.Services;
 
 public interface IKeyStoreService
 {
     Task<List<KeyEntry>> GetAsync();
-
-    Task<bool> AddKey(KeyEntry key);
+    Task<bool> AddKeyAsync(KeyEntry key);
+    Task<bool> UpdateKeyAsync(KeyEntry newKey);
+    Task<bool> DeleteKeyAsync(KeyEntry key);
+    Task<bool> DeleteKeyByIdAsync(int id);
 }
 
-public class KeyStoreService : IKeyStoreService
+public class KeyStoreService(KeyStoreRepository repo, ILogger logger) : IKeyStoreService
 {
-    private KeyStoreRepository _repository;
-
-    public KeyStoreService(KeyStoreRepository repo)
-    {
-        _repository = repo;
-    }
-
     public async Task<List<KeyEntry>> GetAsync()
     {
         try
         {
-            return await _repository.All();
+            logger.LogDebug("Grab all keys");
+            return await repo.All();
         }
-        catch 
+        catch (Exception ex) 
         {
-            return new List<KeyEntry>();
+            logger.LogError("Could not grab key entries :" + ex.Message);
+            return [];
         }
     }
 
-    public async Task<bool> AddKey(KeyEntry key)
+    public async Task<bool> AddKeyAsync(KeyEntry key)
     {
         try
         {
-            var result = await _repository.Create(key);
+            logger.LogDebug("Create new key entry: " + key.Name, key.Id);
+            var result = await repo.Create(key);
             if (!result)
-                throw new Exception("Could not save!");
+            {
+                logger.LogInformation("Could not save entity");
+                return result;
+            }
 
-            return true;
+            return result;
         }
-        catch 
+        catch (Exception ex)
         {
+            logger.LogError("Error was thrown by saving entity:" + ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<bool> UpdateKeyAsync(KeyEntry newKey)
+    {
+        try
+        {
+            logger.LogDebug("Update entity " + newKey.Name);
+            var result = await repo.Update(newKey);
+            if (!result)
+            {
+                logger.LogInformation("Could not update entity");
+                return result;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error was thrown by updating entity " + ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteKeyAsync(KeyEntry key)
+    {
+        try
+        {
+            logger.LogDebug("Deleting entity " + key.Name);
+            var result = await repo.Delete(key);
+            if (!result)
+            {
+                logger.LogInformation("Could not delete entity");
+                return result;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error was thrown by deleting entity " + ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteKeyByIdAsync(int id)
+    {
+        try
+        {
+            logger.LogDebug("Deleting entity " + id);
+            var result = await repo.DeleteById(id);
+            if (!result)
+            {
+                logger.LogInformation("Could not delete entity by id");
+                return result;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Error was thrown by deleting entity by id " + ex.Message);
             return false;
         }
     }

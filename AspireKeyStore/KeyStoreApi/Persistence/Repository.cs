@@ -10,39 +10,33 @@ interface IRepository<T>
     Task<bool> Create(T entity);
     Task<bool> Update(T entity);
     Task<bool> Delete(T entity);
+    Task<bool> DeleteById(int id);
 }
 
-public class Repository<T> : IRepository<T> where T : BaseEntity
+public class Repository<T>(KeyDbContext context) : IRepository<T>
+    where T : BaseEntity
 {
-    private KeyDbContext _context;
-
-    public Repository(KeyDbContext context)
-    {
-        _context = context;
-        context.InitDb();
-    }
-
     public Task<List<T>> All()
     {
-        return _context.Set<T>().ToListAsync();
+        return context.Set<T>().ToListAsync();
     }
 
     public Task<T?> ById(int entityId)
     {
-        return _context.Set<T>().FirstOrDefaultAsync(i => i.Id == entityId);
+        return context.Set<T>().FirstOrDefaultAsync(i => i.Id == entityId);
     }
 
     public async Task<bool> Create(T entity)
     {
-        await _context.Set<T>().AddAsync(entity);
-        var result = await _context.SaveChangesAsync();
+        await context.Set<T>().AddAsync(entity);
+        var result = await context.SaveChangesAsync();
 
         return result > 0;
     }
 
     public async Task<bool> Update(T entity)
     {
-        var db = _context.Set<T>();
+        var db = context.Set<T>();
         var updateOld = await Delete(entity);
 
         if (!updateOld)
@@ -50,13 +44,13 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
         await db.AddAsync(entity);
 
-        var result = await _context.SaveChangesAsync();
+        var result = await context.SaveChangesAsync();
         return result > 0;
     }
 
     public async Task<bool> Delete(T entity)
     {
-        var db = _context.Set<T>();
+        var db = context.Set<T>();
         var resultEntity = await db.FirstOrDefaultAsync(i => i.Id == entity.Id);
 
         if (resultEntity == null)
@@ -65,8 +59,18 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         resultEntity.Deleted = true;
         db.Update(resultEntity);
 
-        var result = await _context.SaveChangesAsync();
+        var result = await context.SaveChangesAsync();
 
         return result > 0;
+    }
+
+    public async Task<bool> DeleteById(int id)
+    {
+        var db = context.Set<T>();
+        var result = await db.FirstOrDefaultAsync(i => i.Id == id);
+
+        if (result == null) return false;
+
+        return await Delete(result);
     }
 }

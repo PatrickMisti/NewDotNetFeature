@@ -17,10 +17,11 @@ public class KeyDbContext : DbContext
     {
 
     }
-
-    public void InitDb()
-    {
-        Database.EnsureCreatedAsync();
-    }
     // endregion 
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KeyEntry>();
+        base.OnModelCreating(modelBuilder);
+    }
 }

@@ -1,3 +1,4 @@
+using AspireKeyStore.ServiceDefaults;
 using KeyStoreApi.Persistence;
 using KeyStoreApi.Services;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +10,14 @@ builder.AddServiceDefaults();
 // Add services to the container.
 builder.Services.AddScoped<KeyStoreRepository>();
 builder.Services.AddTransient<IKeyStoreService, KeyStoreService>();
+builder.Services.AddHostedService<MigrateDatabase>();
 
+// Add Hostings from Aspire
 builder.AddNpgsqlDbContext<KeyDbContext>("keystoreDb");
+builder.AddSeqEndpoint("seq", settings =>
+{
+    settings.DisableHealthChecks = true;
+});
 
 // For single docker service
 /*builder.Services.AddDbContext<KeyDbContext>(opt =>

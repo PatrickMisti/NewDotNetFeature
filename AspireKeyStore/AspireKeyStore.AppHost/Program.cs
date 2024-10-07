@@ -5,7 +5,14 @@ var db = builder
     .WithPgWeb()
     .AddDatabase("keystoreDb");
 
-builder.AddProject<Projects.KeyStoreApi>("keystoreapi")
-    .WithReference(db);
+var seq = builder
+    .AddSeq("seq")
+    .ExcludeFromManifest();
 
-builder.Build().Run();
+builder.AddProject<Projects.KeyStoreApi>("keystoreapi")
+    .WithReference(db)
+    .WithReference(seq);
+
+builder
+    .Build()
+    .Run();
