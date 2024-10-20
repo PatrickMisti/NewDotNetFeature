@@ -7,6 +7,7 @@ namespace KeyStoreApi.Services;
 public interface IKeyStoreService
 {
     Task<List<KeyEntry>> GetAsync();
+    Task<KeyEntry?> GetByIdAsync(int id);
     Task<bool> AddKeyAsync(KeyEntry key);
     Task<bool> UpdateKeyAsync(KeyEntry newKey);
     Task<bool> DeleteKeyAsync(KeyEntry key);
@@ -26,6 +27,20 @@ public class KeyStoreService(KeyStoreRepository repo, ILogger logger) : IKeyStor
         {
             logger.LogError("Could not grab key entries :" + ex.Message);
             return [];
+        }
+    }
+
+    public async Task<KeyEntry?> GetByIdAsync(int id)
+    {
+        try
+        {
+            logger.LogDebug("Grab key by id: " + id);
+            return await repo.ById(id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Could not grab key by id: " + ex.Message);
+            return null;
         }
     }
 
