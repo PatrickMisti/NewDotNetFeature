@@ -1,61 +1,52 @@
-﻿using Connectivity;
+﻿using Connection.Services;
+using Connectivity;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
-using Student.Resource;
+
 
 namespace Student.Services;
 
-public class StudentService(Database db, ILogger<StudentService> logger, IPublishEndpoint bus) : IStudentService
+public class StudentService : IStudentService
 {
-    public async Task<IList<Models.Student>> GetStudentsAsync()
+    ILogger<StudentService> _logger;
+    private IPublishEndpoint _publishEndpoint;
+    private StudentDbContext db;
+
+
+    public StudentService(ILogger<StudentService> logger, IPublishEndpoint bus)
     {
-        await bus.Publish(new CreateMessage
+        _logger = logger;
+        _publishEndpoint = bus;
+        db = StudentDbContext.Instance;
+    }
+
+    public async Task<IList<Connection.Models.Student>> GetStudentsAsync()
+    {
+        await _publishEndpoint.Publish(new CreateMessage
         {
             Message = "Hllp"
         });
 
-        if (db.Database.EnsureCreated())
-        {
-
-        }
-
-        logger.LogDebug("Grab all Students");
-        return await db.Students.ToListAsync();
+        _logger.LogDebug("Grab all Students");
+        return await db.GetAllAsync();
     }
 
-    public async Task<Models.Student?> GetStudentByIdAsync(int id)
+    public async Task<Connection.Models.Student?> GetStudentByIdAsync(int id)
     {
-        return await db.Students.FirstOrDefaultAsync(student => student.Id == id);
+        return await db.GetById(id);
     }
 
-    public async Task<bool> CreateStudentAsync(Models.Student student)
+    public async Task<bool> CreateStudentAsync(Connection.Models.Student student)
     {
-        await db.Students.AddAsync(student);
-        return await db.SaveChangesAsync() > 0;
+        return (await db.Create(student)) is not null;
     }
 
-    public async Task<bool> UpdateStudentAsync(Models.Student student)
+    public async Task<bool> UpdateStudentAsync(Connection.Models.Student student)
     {
-        var oldStudent = await GetStudentByIdAsync(student.Id);
-        if (oldStudent is null) return false;
-
-        student.Id = default;
-        db.Students.Add(student);
-
-        oldStudent.Deleted = true;
-        oldStudent.TimeStamp = DateTime.UtcNow;
-
-        db.Students.Update(oldStudent);
-        return await db.SaveChangesAsync() > 0;
+        return await db.Update(student);
     }
 
     public async Task<bool> DeleteStudentAsync(int id)
     {
-        var student = await GetStudentByIdAsync(id);
-        if (student is null) return false;
-        student.Deleted = true;
-        student.TimeStamp = DateTime.Now;
-        db.Students.Update(student);
-        return await db.SaveChangesAsync() > 0;
+        return await db.Delete(id);
     }
 }

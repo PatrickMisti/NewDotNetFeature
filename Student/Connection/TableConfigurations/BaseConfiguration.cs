@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Student.Models;
+using Connection.Models;
 
-namespace Student.Resource.TableConfigurations;
+namespace Connection.TableConfigurations;
 
 public class BaseConfiguration<T>: IEntityTypeConfiguration<T> where T: BaseEntity
 {

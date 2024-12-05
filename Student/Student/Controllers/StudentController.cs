@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Student.Services;
 
 namespace Student.Controllers;
@@ -10,21 +9,21 @@ public class StudentController(IStudentService repo)
 {
     [HttpGet]
     [Route("all")]
-    public async Task<IList<Models.Student>> GetAll()
+    public async Task<IList<Connection.Models.Student>> GetAll()
     {
         return await repo.GetStudentsAsync();
     }
 
     [HttpPut]
     [Route("create")]
-    public async Task<bool> AddStudent(Models.Student student)
+    public async Task<bool> AddStudent(Connection.Models.Student student)
     {
         return await repo.CreateStudentAsync(student);
     }
 
     [HttpPost]
     [Route("update")]
-    public async Task<bool> UpdateStudent(Models.Student student)
+    public async Task<bool> UpdateStudent(Connection.Models.Student student)
     {
         return await repo.UpdateStudentAsync(student);
     }

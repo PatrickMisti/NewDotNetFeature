@@ -1,14 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Student.Resource.TableConfigurations;
+﻿using Connection.Models;
+using Microsoft.EntityFrameworkCore;
+using Connection.TableConfigurations;
+using Microsoft.Extensions.Configuration;
 
-namespace Student.Resource;
+namespace Connection;
 
 public class Database : DbContext
 {
     private readonly string _dbConnectionString = "appsettings.json";
     private readonly string _defaultConnectionString = "DefaultConnectionString";
-    private readonly string _postgreConnectionString = "PostgreSqlConnectionString";
-    public DbSet<Models.Student> Students { get; set; }
+    private readonly string _postGreConnectionString = "PostgreSqlConnectionString";
+
+    public DbSet<Student> Students { get; set; }
 
     public Database(DbContextOptions<Database> options) : base(options)
     {
@@ -20,14 +23,14 @@ public class Database : DbContext
 
     }
 
-    // only is needed if there isn't configured in program file
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(Environment.CurrentDirectory, _dbConnectionString))
             .Build();
+
         //optionsBuilder.UseSqlServer(config.GetConnectionString(_defaultConnectionString));
-        optionsBuilder.UseNpgsql(config.GetConnectionString(_postgreConnectionString));
+        optionsBuilder.UseNpgsql(config.GetConnectionString(_postGreConnectionString));
         base.OnConfiguring(optionsBuilder);
     }
 
@@ -45,6 +48,6 @@ public class Database : DbContext
 
     private void AddConfigurations(ModelBuilder builder)
     {
-        builder.ApplyConfiguration(new BaseConfiguration<Models.Student>());
+        builder.ApplyConfiguration(new BaseConfiguration<Student>());
     }
 }

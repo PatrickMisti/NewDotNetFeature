@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Student.Models;
+﻿namespace Connection.Models;
 
 public class Student : BaseEntity
 {
