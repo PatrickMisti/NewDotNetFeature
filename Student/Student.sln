@@ -9,6 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentRunner", "StudentRun
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connectivity", "Connectivity\Connectivity.csproj", "{C82F0279-4AC6-4BEE-B631-091FD3F69134}"
 EndProject
+<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Testing", "Testing\Testing.csproj", "{18EB8B77-A7A3-492B-9574-50AB42531231}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{A020DCBF-6EC4-4AE5-8DE0-A7D1EC5882F9}"
@@ -20,6 +21,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{C329DF66-E2E0-4B4C-97F3-2C04A101EFC3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentView", "StudentView\StudentView.csproj", "{F055761D-44E5-49E0-B08B-6A88473379E3}"
+=======
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Connection", "Connection\Connection.csproj", "{F68F6077-9649-4092-B562-0D6218E6DBBF}"
+>>>>>>> origin/other
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +43,7 @@ Global
 		{C82F0279-4AC6-4BEE-B631-091FD3F69134}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C82F0279-4AC6-4BEE-B631-091FD3F69134}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C82F0279-4AC6-4BEE-B631-091FD3F69134}.Release|Any CPU.Build.0 = Release|Any CPU
+<<<<<<< HEAD
 		{18EB8B77-A7A3-492B-9574-50AB42531231}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{18EB8B77-A7A3-492B-9574-50AB42531231}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18EB8B77-A7A3-492B-9574-50AB42531231}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -49,6 +54,12 @@ Global
 		{F055761D-44E5-49E0-B08B-6A88473379E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F055761D-44E5-49E0-B08B-6A88473379E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F055761D-44E5-49E0-B08B-6A88473379E3}.Release|Any CPU.Build.0 = Release|Any CPU
+=======
+		{F68F6077-9649-4092-B562-0D6218E6DBBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F68F6077-9649-4092-B562-0D6218E6DBBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F68F6077-9649-4092-B562-0D6218E6DBBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F68F6077-9649-4092-B562-0D6218E6DBBF}.Release|Any CPU.Build.0 = Release|Any CPU
+>>>>>>> origin/other
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

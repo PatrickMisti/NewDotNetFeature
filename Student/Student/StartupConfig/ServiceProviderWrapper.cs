@@ -1,7 +1,12 @@
-﻿using Connectivity.Configuration;
+﻿using Connection;
+using Connection.Services;
+using Connectivity.Configuration;
 using MassTransit;
+<<<<<<< HEAD
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Student.Health;
+=======
+>>>>>>> origin/other
 using Student.Services;
 
 namespace Student.StartupConfig;
@@ -11,7 +16,11 @@ internal static class ServiceProviderWrapper
     public static IServiceCollection AddScopedCollection(this IServiceCollection cfg)
     {
         cfg.AddScoped<IStudentService, StudentService>();
+<<<<<<< HEAD
         cfg.AddSingleton<PubSub>();
+=======
+        //cfg.AddSingleton<StudentDbContext>();
+>>>>>>> origin/other
         return cfg;
     }
 

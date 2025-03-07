@@ -22,6 +22,19 @@ public class KeyStoreController : ControllerBase
         return Results.Ok(await _keyStoreService.GetAsync());
     }
 
+
+    [HttpGet]
+    [Route("get/{id}")]
+    public async Task<IResult> GetById(int id)
+    {
+        var result = await _keyStoreService.GetByIdAsync(id);
+
+        if (result == null)
+            return Results.NotFound();
+
+        return Results.Ok(result);
+    }
+
     [HttpPost]
     [Route("create")]
     public async Task<IResult> Create(KeyEntry entry)
