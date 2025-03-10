@@ -1,0 +1,6 @@
+@Channel_Backworker_HostAddress = http://localhost:5095
+
+GET {{Channel_Backworker_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
