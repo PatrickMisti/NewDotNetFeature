@@ -1,4 +1,6 @@
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc;
+using Student_Coordinator.Message;
 
 namespace Channel_Backworker.Controllers;
 
@@ -12,15 +14,18 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly Channel<RequestBackgroundService> _channel;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, Channel<RequestBackgroundService> c)
     {
         _logger = logger;
+        _channel = c;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
+    public async Task<IEnumerable<WeatherForecast>> Get()
     {
+        await _channel.Writer.WriteAsync(new RequestBackgroundService { Message = "Hello from WeatherForecastController" });
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
             Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
