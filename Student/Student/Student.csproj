@@ -27,14 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-<<<<<<< HEAD
-=======
     <Folder Include="Assets\" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Connection\Connection.csproj" />
->>>>>>> origin/other
     <ProjectReference Include="..\Connectivity\Connectivity.csproj" />
   </ItemGroup>
 

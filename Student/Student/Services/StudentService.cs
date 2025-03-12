@@ -1,20 +1,13 @@
-<<<<<<< HEAD
 ﻿using Connectivity.Configuration;
 using Connectivity.Messages;
 using OneOf;
 using OneOf.Types;
 using Student.Dtos;
 using ILogger = Serilog.ILogger;
-=======
-﻿using Connection.Services;
-using Connectivity;
-using MassTransit;
->>>>>>> origin/other
 
 
 namespace Student.Services;
 
-<<<<<<< HEAD
 public class StudentService(ILogger logger, PubSub endpoint) : IStudentService
 {
     public async Task<OneOf<IList<StudentDto>, Exception>> GetStudentsAsync()
@@ -67,51 +60,10 @@ public class StudentService(ILogger logger, PubSub endpoint) : IStudentService
 
         logger.Debug("Updated student {0}!",response.Message.IsUpdated ? " successfully": "failed");
         return response.Message.IsUpdated ? new True() : new False();
-=======
-public class StudentService : IStudentService
-{
-    ILogger<StudentService> _logger;
-    private IPublishEndpoint _publishEndpoint;
-    private StudentDbContext db;
-
-
-    public StudentService(ILogger<StudentService> logger, IPublishEndpoint bus)
-    {
-        _logger = logger;
-        _publishEndpoint = bus;
-        db = StudentDbContext.Instance;
-    }
-
-    public async Task<IList<Connection.Models.Student>> GetStudentsAsync()
-    {
-        await _publishEndpoint.Publish(new CreateMessage
-        {
-            Message = "Hllp"
-        });
-
-        _logger.LogDebug("Grab all Students");
-        return await db.GetAllAsync();
-    }
-
-    public async Task<Connection.Models.Student?> GetStudentByIdAsync(int id)
-    {
-        return await db.GetById(id);
-    }
-
-    public async Task<bool> CreateStudentAsync(Connection.Models.Student student)
-    {
-        return (await db.Create(student)) is not null;
-    }
-
-    public async Task<bool> UpdateStudentAsync(Connection.Models.Student student)
-    {
-        return await db.Update(student);
->>>>>>> origin/other
     }
 
     public async Task<OneOf<True, False, Exception>> DeleteStudentAsync(int id)
     {
-<<<<<<< HEAD
         logger.Debug("Delete send student to runner {0}", nameof(GetDeleteStudentMessage));
         var response = await endpoint.PubSubAsync<GetDeleteStudentMessage, DeleteStudentMessage>(new GetDeleteStudentMessage(id));
 
@@ -120,8 +72,5 @@ public class StudentService : IStudentService
 
         logger.Debug("Deleted student {0}!", response.Message.IsDeleted ? " successfully" : "failed");
         return response.Message.IsDeleted ? new True() : new False();
-=======
-        return await db.Delete(id);
->>>>>>> origin/other
     }
 }

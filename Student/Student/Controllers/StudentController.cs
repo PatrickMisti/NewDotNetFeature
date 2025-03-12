@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 ﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Student.Dtos;
-=======
-﻿using Microsoft.AspNetCore.Mvc;
->>>>>>> origin/other
+
 using Student.Services;
 using ILogger = Serilog.ILogger;
 
@@ -18,11 +15,9 @@ public class StudentController(IStudentService repo, ILogger logger)
     [ProducesResponseType<List<StudentDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Route("all")]
-<<<<<<< HEAD
+
     public async Task<IResult> GetAll()
-=======
-    public async Task<IList<Connection.Models.Student>> GetAll()
->>>>>>> origin/other
+
     {
         var result = await repo.GetStudentsAsync();
         
@@ -39,17 +34,13 @@ public class StudentController(IStudentService repo, ILogger logger)
     }
 
     [HttpPut]
-<<<<<<< HEAD
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType<StudentDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [Route("byId/{id}")]
     public async Task<IResult> UpdateStudent(int id)
-=======
-    [Route("create")]
-    public async Task<bool> AddStudent(Connection.Models.Student student)
->>>>>>> origin/other
+
     {
         var result = await repo.GetStudentByIdAsync(id);
 
@@ -66,17 +57,12 @@ public class StudentController(IStudentService repo, ILogger logger)
     }
 
     [HttpPost]
-<<<<<<< HEAD
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [Route("create")]
     public async Task<IResult> AddStudent(StudentDto student)
-=======
-    [Route("update")]
-    public async Task<bool> UpdateStudent(Connection.Models.Student student)
->>>>>>> origin/other
     {
         var result = await repo.CreateStudentAsync(student);
 
