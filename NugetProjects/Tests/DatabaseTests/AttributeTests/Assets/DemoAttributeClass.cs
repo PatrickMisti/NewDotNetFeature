@@ -2,7 +2,7 @@
 
 namespace Tests.DatabaseTests.AttributeTests.Assets;
 
-[Table()]
+[Table]
 public class DemoAttributeClass()
 {
     [Key(Name = "DemoKey")]

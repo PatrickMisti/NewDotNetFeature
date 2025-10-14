@@ -1,22 +1,90 @@
-﻿using FhOoeProjectPackages.Database;
+﻿using System.Data.Common;
+using FhOoeProjectPackages.Database;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
+using SQLitePCL;
 using Tests.DatabaseTests.AttributeTests.Assets;
 
 namespace Tests.DatabaseTests;
 
 internal class DbContextTests
 {
-    [Test]
-    public void SampleTest()
+    DbConnection _connection = null!;
+    private readonly string _connectionString = "Data Source=TestDb;Mode=Memory;Cache=Shared";
+
+    [SetUp]
+    public async Task Setup()
     {
-        using var db = new SqliteConnection("Data Source=:memory:");
-        using var context = new DbContext(db);
-        var demoSet = context.Set<DemoAttributeClass>();
+        Batteries.Init();
+        _connection = new SqliteConnection(_connectionString);
+        await _connection.OpenAsync();
+        await CreateTable(_connection);
+    }
 
-        demoSet.Add(new DemoAttributeClass("hallo", 23, ""));
-        var allItems = demoSet.GetAll<DemoAttributeClass>().ToList();
+    [TearDown]
+    public async Task TearDown()
+    {
+        await _connection.CloseAsync();
+        await _connection.DisposeAsync();
+    }
 
-        Assert.That(allItems, Is.EqualTo(1));
+    private static async Task CreateTable(DbConnection connection)
+    {
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+                          CREATE TABLE DemoAttributeClass (
+                              DemoKey INTEGER PRIMARY KEY AUTOINCREMENT,
+                              DemoColumn TEXT NOT NULL,
+                              Age INTEGER NOT NULL
+                          );
+                          """;
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    [Test]
+    public async Task AddAsync_Then_GetAllAsync_Works_With_Sqlite_InMemory()
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        using var context = new DbContext(conn);
+        var set = context.Set<DemoAttributeClass>();
+
+        // Insert
+        var entity = new DemoAttributeClass("hallo", 23, "ignored");
+        var entity2 = new DemoAttributeClass("hallo", 24, "ignored");
+        var inserted = await set.AddAsync(entity);
+        var inserted2 = await set.AddAsync(entity2);
+        Assert.That(inserted, Is.True);
+        Assert.That(inserted2, Is.True);
+
+        // Read back
+        var all = (await set.GetAllAsync()).ToList();
+        Assert.That(all.Count, Is.EqualTo(2));
+        Assert.That(all[0].Id, Is.EqualTo(1));
+        Assert.That(all[0].Name, Is.EqualTo("hallo"));
+        Assert.That(all[0].Age, Is.EqualTo(23));
+    }
+
+    [Test]
+    public async Task Check_Get_Value_By_Id()
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        using var context = new DbContext(conn);
+        var set = context.Set<DemoAttributeClass>();
+
+        // Insert
+        var entity = new DemoAttributeClass("hallo", 23, "ignored");
+        var entity2 = new DemoAttributeClass("servus", 24, "ignored");
+        var inserted = await set.AddAsync(entity);
+        var inserted2 = await set.AddAsync(entity2);
+        Assert.That(inserted, Is.True);
+        Assert.That(inserted2, Is.True);
+
+        var byId1 = await set.GetByIdAsync(1);
+        Assert.Multiple(() =>
+        {
+            Assert.That(byId1, Is.Not.Null);
+            Assert.That(byId1!.Name, Is.EqualTo(entity.Name));
+            Assert.That(byId1!.Name, Is.Not.EqualTo(entity2.Name));
+        });
     }
 }
