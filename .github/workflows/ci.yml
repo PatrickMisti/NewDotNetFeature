@@ -37,15 +37,13 @@ jobs:
     env:
       OWNER: PatrickMisti
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: 9.0.x }
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+      - name: Debug ref
+        run: echo "github.ref = ${{ github.ref }}"
 
       - name: Extract version from tag
         id: v
@@ -54,17 +52,18 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           echo "version=${TAG#v}" >> $GITHUB_OUTPUT
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore NugetProjects/FhOoeProjectPackages/FhOoeProjectPackages.csproj
 
       - name: Pack
         run: |
           dotnet pack NugetProjects/FhOoeProjectPackages/FhOoeProjectPackages.csproj \
-            -c Release --no-restore \
+            --configuration Release \
+            --no-restore \
             -p:PackageVersion=${{ steps.v.outputs.version }} \
             -o ./artifacts
 
-      - name: Publish to GitHub Packages
+      - name: Push to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
