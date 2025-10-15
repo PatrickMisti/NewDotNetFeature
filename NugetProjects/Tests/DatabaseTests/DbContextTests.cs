@@ -2,11 +2,12 @@
 using FhOoeProjectPackages.Database;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
-using SQLitePCL;
 using Tests.DatabaseTests.Assets;
 
 namespace Tests.DatabaseTests;
 
+[TestFixture]
+[Parallelizable(ParallelScope.None)]
 public class DbContextTests
 {
     DbConnection _connection = null!;
@@ -15,7 +16,6 @@ public class DbContextTests
     [SetUp]
     public async Task Setup()
     {
-        Batteries.Init();
         _connection = new SqliteConnection(_connectionString);
         await _connection.OpenAsync();
     }
