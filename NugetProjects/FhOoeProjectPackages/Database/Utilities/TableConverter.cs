@@ -47,7 +47,9 @@ public class TableConverter
     public PropertyInfo FindPropertyInfo(ColumnDataSet propertyName) => Properties.First(x => x.Name == propertyName.FieldName);
     
     public PropertyInfo FindKeyPropertyInfo() => Properties.First(x => x.Name == Columns.First(y => y.IsPrim).FieldName);
-    
+
+    public PropertyInfo FindForeignPropertyInfo() => Properties.First(x => x.Name == Columns.First(y => y.IsForeign).FieldName);
+
     private static bool HasKeyInColumn(IList<ColumnDataSet> list)
     {
         var key = list.Where(x => x.IsPrim).ToList();
@@ -73,6 +75,7 @@ public class TableConverter
             Name: casted?.Name ?? key.Name, 
             IsPrim: true,
             IsForeign: false,
+            IsNullable: false,
             AutoIncr: casted?.AutoIncrement ?? true);
     }
 
@@ -88,6 +91,7 @@ public class TableConverter
                     Name: cols?.Name ?? x.Name,
                     IsPrim: cols!.IsPrimaryKey,
                     IsForeign: cols.IsForeignKey,
+                    IsNullable: cols.IsNullable,
                     AutoIncr: cols.AutoIncrement);
             })
             .ToList();
@@ -107,5 +111,5 @@ public class TableConverter
         return table.Name ?? type.Name;
     }
 
-    public record ColumnDataSet(string FieldName, string Name, bool IsPrim, bool IsForeign, bool AutoIncr);
+    public record ColumnDataSet(string FieldName, string Name, bool IsPrim, bool IsForeign,bool IsNullable, bool AutoIncr);
 }

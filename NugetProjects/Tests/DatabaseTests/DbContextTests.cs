@@ -3,7 +3,7 @@ using FhOoeProjectPackages.Database;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
 using SQLitePCL;
-using Tests.DatabaseTests.AttributeTests.Assets;
+using Tests.DatabaseTests.Assets;
 
 namespace Tests.DatabaseTests;
 
@@ -18,7 +18,7 @@ internal class DbContextTests
         Batteries.Init();
         _connection = new SqliteConnection(_connectionString);
         await _connection.OpenAsync();
-        await CreateTable(_connection);
+        //await CreateTable(_connection);
     }
 
     [TearDown]

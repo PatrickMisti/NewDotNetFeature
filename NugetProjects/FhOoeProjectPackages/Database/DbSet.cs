@@ -4,8 +4,16 @@ using System.Data.Common;
 
 namespace FhOoeProjectPackages.Database;
 
-public class DbSet<T>(DbConnection connection) where T : class, new()
+public class DbSet<T> where T : class, new()
 {
+    private readonly DbConnection _connection;
+    public DbSet(DbConnection connection)
+    {
+        _connection = connection;
+        var table = DataTableConverter.CreateTableFromClass(TableConverter.GetClassInfo<T>());
+        DataTableConverter.EnsureTableExists(_connection, table);
+    }
+
     public async Task<IEnumerable<T>> GetAllAsync()
     {
         var classInfo = TableConverter.GetClassInfo<T>();
@@ -15,9 +23,9 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
 
         try
         {
-            await connection.OpenAsync();
+            await _connection.OpenAsync();
 
-            await using var command = connection.CreateCommand();
+            await using var command = _connection.CreateCommand();
             command.CommandText = sqlStmt;
             command.CommandType = CommandType.Text;
             await using var read = await command.ExecuteReaderAsync();
@@ -26,8 +34,8 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         }
         finally
         {
-            if (connection.State != ConnectionState.Closed)
-                await connection.CloseAsync();
+            if (_connection.State != ConnectionState.Closed)
+                await _connection.CloseAsync();
         }
 
         return DataTableConverter.MapRows<T>(table, classInfo);
@@ -42,13 +50,13 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         var paramNames = string.Join(", ", insertCols.Select(c => "@" + c.Name));
 
 
-        var (sqlStmt, withReturn) = DataTableConverter.GetInsertQueryFromProvider(connection, classInfo.TableName, columnNames, paramNames);
+        var (sqlStmt, withReturn) = DataTableConverter.GetInsertQueryFromProvider(_connection, classInfo.TableName, columnNames, paramNames);
         var table = new DataTable();
 
         try
         {
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
+            await _connection.OpenAsync();
+            await using var command = _connection.CreateCommand();
             command.CommandText = sqlStmt;
             command.CommandType = CommandType.Text;
 
@@ -74,8 +82,8 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         }
         finally
         {
-            if (connection.State != ConnectionState.Closed)
-                await connection.CloseAsync();
+            if (_connection.State != ConnectionState.Closed)
+                await _connection.CloseAsync();
         }
     }
 
@@ -87,9 +95,9 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         var table = new DataTable();
         try
         {
-            await connection.OpenAsync();
+            await _connection.OpenAsync();
 
-            await using var command = connection.CreateCommand();
+            await using var command = _connection.CreateCommand();
             command.CommandText = sqlStmt;
             command.CommandType = CommandType.Text;
 
@@ -103,8 +111,8 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         }
         finally
         {
-            if (connection.State != ConnectionState.Closed)
-                await connection.CloseAsync();
+            if (_connection.State != ConnectionState.Closed)
+                await _connection.CloseAsync();
         }
 
         return DataTableConverter.MapRows<T>(table, classInfo).FirstOrDefault();
@@ -126,8 +134,8 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
 
         try
         {
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
+            await _connection.OpenAsync();
+            await using var command = _connection.CreateCommand();
             command.CommandText = sqlStmt;
             command.CommandType = CommandType.Text;
 
@@ -152,8 +160,8 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         }
         finally
         {
-            if (connection.State != ConnectionState.Closed)
-                await connection.CloseAsync();
+            if (_connection.State != ConnectionState.Closed)
+                await _connection.CloseAsync();
         }
     }
 
@@ -165,9 +173,9 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
 
         try
         {
-            await connection.OpenAsync();
+            await _connection.OpenAsync();
 
-            await using var command = connection.CreateCommand();
+            await using var command = _connection.CreateCommand();
             command.CommandText = sqlStmt;
             command.CommandType = CommandType.Text;
             var p = command.CreateParameter();
@@ -181,8 +189,8 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         }
         finally
         {
-            if (connection.State != ConnectionState.Closed)
-                await connection.CloseAsync();
+            if (_connection.State != ConnectionState.Closed)
+                await _connection.CloseAsync();
         }
     }
 }

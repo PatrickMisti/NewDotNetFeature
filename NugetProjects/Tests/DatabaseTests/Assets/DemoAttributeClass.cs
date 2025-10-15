@@ -1,6 +1,6 @@
 ﻿using FhOoeProjectPackages.Database.DbAttributes;
 
-namespace Tests.DatabaseTests.AttributeTests.Assets;
+namespace Tests.DatabaseTests.Assets;
 
 [Table]
 public class DemoAttributeClass()
