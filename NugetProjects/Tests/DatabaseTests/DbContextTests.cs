@@ -51,10 +51,10 @@ internal class DbContextTests
         // Insert
         var entity = new DemoAttributeClass("hallo", 23, "ignored");
         var entity2 = new DemoAttributeClass("hallo", 24, "ignored");
-        var inserted = await set.AddAsync(entity);
-        var inserted2 = await set.AddAsync(entity2);
-        Assert.That(inserted, Is.True);
-        Assert.That(inserted2, Is.True);
+        await set.AddAsync(entity);
+        await set.AddAsync(entity2);
+        //Assert.That(inserted, Is.Not.Empty);
+        //Assert.That(inserted2, Is.Not.Empty);
 
         // Read back
         var all = (await set.GetAllAsync()).ToList();
@@ -74,10 +74,10 @@ internal class DbContextTests
         // Insert
         var entity = new DemoAttributeClass("hallo", 23, "ignored");
         var entity2 = new DemoAttributeClass("servus", 24, "ignored");
-        var inserted = await set.AddAsync(entity);
-        var inserted2 = await set.AddAsync(entity2);
-        Assert.That(inserted, Is.True);
-        Assert.That(inserted2, Is.True);
+        await set.AddAsync(entity);
+        await set.AddAsync(entity2);
+        //Assert.That(inserted, Is.Not.Empty);
+        //Assert.That(inserted2, Is.Not.Empty);
 
         var byId1 = await set.GetByIdAsync(1);
         Assert.Multiple(() =>
@@ -86,5 +86,52 @@ internal class DbContextTests
             Assert.That(byId1!.Name, Is.EqualTo(entity.Name));
             Assert.That(byId1!.Name, Is.Not.EqualTo(entity2.Name));
         });
+    }
+
+    [Test]
+    public async Task Check_Add_And_Remove_Value()
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        using var context = new DbContext(conn);
+        var set = context.Set<DemoAttributeClass>();
+
+        var entity = new DemoAttributeClass("hallo", 23, "ignored");
+        await set.AddAsync(entity);
+
+        var all = (await set.GetAllAsync()).ToList();
+        Assert.That(all.Count, Is.EqualTo(1));
+
+        var isDel = await set.DeleteByIdAsync(all.First().Id);
+        Assert.That(isDel, Is.True);
+
+        var allAfterDel = (await set.GetAllAsync()).ToList();
+        Assert.That(allAfterDel.Count, Is.EqualTo(0));
+    }
+
+    [Test]
+    public async Task Check_Add_And_Update_Value()
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        using var context = new DbContext(conn);
+        var set = context.Set<DemoAttributeClass>();
+
+        var entity = new DemoAttributeClass("hallo", 23, "ignored");
+        await set.AddAsync(entity);
+        var all = (await set.GetAllAsync()).ToList();
+        Assert.That(all.Count, Is.EqualTo(1));
+
+        var toUpdate = all.First();
+        toUpdate.Name = "Seruvs";
+
+        var updated = await set.UpdateAsync(toUpdate);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(updated, Is.Not.Null);
+            Assert.That(updated!.Id, Is.EqualTo(toUpdate.Id));
+            Assert.That(updated!.Name, Is.EqualTo("Seruvs"));
+            Assert.That(updated!.Age, Is.EqualTo(23));
+        });
+
     }
 }

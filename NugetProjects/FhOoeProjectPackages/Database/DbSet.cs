@@ -1,7 +1,6 @@
 ﻿using FhOoeProjectPackages.Database.Utilities;
 using System.Data;
 using System.Data.Common;
-using System.Globalization;
 
 namespace FhOoeProjectPackages.Database;
 
@@ -31,10 +30,10 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
                 await connection.CloseAsync();
         }
 
-        return MapRows(table, classInfo);
+        return DataTableConverter.MapRows<T>(table, classInfo);
     }
 
-    public async Task<bool> AddAsync(T element)
+    public async Task<T?> AddAsync(T element)
     {
         var classInfo = TableConverter.GetClassInfo<T>();
         var insertCols = classInfo.Columns.Where(c => !c.AutoIncr).ToList();
@@ -42,7 +41,9 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
         var columnNames = string.Join(", ", insertCols.Select(c => c.Name));
         var paramNames = string.Join(", ", insertCols.Select(c => "@" + c.Name));
 
-        var sqlStmt = $"INSERT INTO {classInfo.TableName} ({columnNames}) VALUES ({paramNames})";
+
+        var (sqlStmt, withReturn) = DataTableConverter.GetInsertQueryFromProvider(connection, classInfo.TableName, columnNames, paramNames);
+        var table = new DataTable();
 
         try
         {
@@ -61,8 +62,15 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
                 param.Value = value;
                 command.Parameters.Add(param);
             }
-            var result = await command.ExecuteNonQueryAsync();
-            return result > 0;
+
+            if (withReturn)
+            {
+                await using var result = await command.ExecuteReaderAsync();
+                table.Load(result);
+                return DataTableConverter.MapRows<T>(table, classInfo).FirstOrDefault();
+            }
+            var affected = await command.ExecuteNonQueryAsync();
+            return affected > 0 ? element : null;
         }
         finally
         {
@@ -99,121 +107,82 @@ public class DbSet<T>(DbConnection connection) where T : class, new()
                 await connection.CloseAsync();
         }
 
-        return MapRows(table, classInfo).FirstOrDefault();
+        return DataTableConverter.MapRows<T>(table, classInfo).FirstOrDefault();
     }
 
-    /*
-
-    public bool Update<T>(T element) where T : class, new()
+    public async Task<T?> UpdateAsync(T element)
     {
-        var command = connection.CreateCommand();
-        var converter = new TableConverter<T>(element);
-        var keyColumn = converter.Columns.FirstOrDefault(c => c.IsPrimaryKey);
+        var classInfo = TableConverter.GetClassInfo<T>();
 
-        if (keyColumn == null)
-            throw new ArgumentException("The provided class must have a primary key defined.");
+        var keyCol = classInfo.Columns.First(c => c.IsPrim);
+        var keyProp = classInfo.FindKeyPropertyInfo();
+        var keyValue = keyProp.GetValue(element) ?? throw new InvalidOperationException("Primary key value is null.");
 
-        var setClauses = string
-            .Join(", ", converter.Columns
-                .Where(c => !c.IsPrimaryKey)
-                .Select(c => $"{c.Name} = @{c.Name}"));
+        var updatableCols = classInfo.Columns.Where(c => !c.IsPrim).ToList();
+        if (updatableCols.Count == 0) return null;
 
-        command.CommandText = $"UPDATE {converter.TableName} SET {setClauses} WHERE {keyColumn.Name} = @{keyColumn.Name}";
-        
-        foreach (var column in converter.Columns)
+        var setClause = string.Join(", ", updatableCols.Select(c => $"{c.Name} = @{c.Name}"));
+        var sqlStmt = $"UPDATE {classInfo.TableName} SET {setClause} Where {keyCol.Name} = @Key";
+
+        try
         {
-            var prop = typeof(T).GetProperty(column.Name!);
-            var value = prop?.GetValue(element) ?? DBNull.Value;
-            var parameter = command.CreateParameter();
-            parameter.ParameterName = "@" + column.Name;
-            parameter.Value = value;
-            command.Parameters.Add(parameter);
-        }
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = sqlStmt;
+            command.CommandType = CommandType.Text;
 
-        connection.Open();
-        var result = command.ExecuteNonQuery();
-        connection.Close();
-        return result > 0;
-    }
-
-    public bool Delete<T>(T element) where T : class, new()
-    {
-        var command = connection.CreateCommand();
-        var converter = new TableConverter<T>(element);
-        var keyColumn = converter.Columns.FirstOrDefault(c => c.IsPrimaryKey);
-
-        if (keyColumn == null)
-            throw new ArgumentException("The provided class must have a primary key defined.");
-
-        command.CommandText = $"DELETE FROM {converter.TableName} WHERE {keyColumn.Name} = @{keyColumn.Name}";
-
-        var prop = typeof(T).GetProperty(keyColumn.Name!);
-        var value = prop?.GetValue(element) ?? DBNull.Value;
-        var parameter = command.CreateParameter();
-
-        parameter.ParameterName = "@" + keyColumn.Name;
-        parameter.Value = value;
-        command.Parameters.Add(parameter);
-
-        connection.Open();
-        var result = command.ExecuteNonQuery();
-        connection.Close();
-        return result > 0;
-    }*/
-
-    private static IEnumerable<T> MapRows(DataTable table, TableConverter classInfo)
-    {
-        var list = new List<T>(table.Rows.Count);
-
-        foreach (DataRow row in table.Rows)
-        {
-            var obj = new T();
-
-            foreach (var col in classInfo.Columns)
+            foreach (var col in updatableCols)
             {
-                if (!table.Columns.Contains(col.Name)) continue;
-
-                var raw = row[col.Name];
-                if (raw == DBNull.Value) continue;
-
                 var prop = classInfo.FindPropertyInfo(col);
-                if (!prop.CanWrite) continue;
+                var value = prop.GetValue(element) ?? DBNull.Value;
 
-                var value = ConvertTo(prop.PropertyType, raw);
-                var set = prop.GetSetMethod(nonPublic: true);
-
-                if (set is null) continue;
-                set.Invoke(obj, [value]);
+                var p = command.CreateParameter();
+                p.ParameterName = "@" + col.Name;
+                p.Value = value;
+                command.Parameters.Add(p);
             }
 
-            list.Add(obj);
-        }
+            var keyParam = command.CreateParameter();
+            keyParam.ParameterName = "@Key";
+            keyParam.Value = keyValue;
+            command.Parameters.Add(keyParam);
+            var affected = await command.ExecuteNonQueryAsync();
 
-        return list;
+            return affected > 0 ? element : null;
+        }
+        finally
+        {
+            if (connection.State != ConnectionState.Closed)
+                await connection.CloseAsync();
+        }
     }
 
-    private static object? ConvertTo(Type targetType, object raw)
+    public async Task<bool> DeleteByIdAsync(int id)
     {
-        var t = Nullable.GetUnderlyingType(targetType) ?? targetType;
+        var classInfo = TableConverter.GetClassInfo<T>();
+        var keyCol = classInfo.Columns.First(c => c.IsPrim);
+        var sqlStmt = $"DELETE FROM {classInfo.TableName} WHERE {keyCol.Name} = @Id";
 
-        if (t.IsEnum)
+        try
         {
-            if (raw is string s) return Enum.Parse(t, s, ignoreCase: true);
-            var underlying = Enum.GetUnderlyingType(t);
-            var num = Convert.ChangeType(raw, underlying, CultureInfo.InvariantCulture)!;
-            return Enum.ToObject(t, num);
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = sqlStmt;
+            command.CommandType = CommandType.Text;
+            var p = command.CreateParameter();
+
+            p.ParameterName = "@Id";
+            p.Value = id;
+            command.Parameters.Add(p);
+            var affected = await command.ExecuteNonQueryAsync();
+
+            return affected > 0;
         }
-
-        if (t == typeof(Guid))
-            return raw is Guid g ? g : Guid.Parse(raw.ToString()!);
-
-        if (t == typeof(DateTimeOffset))
+        finally
         {
-            if (raw is DateTimeOffset dto) return dto;
-            if (raw is DateTime dt) return new DateTimeOffset(dt);
-            return DateTimeOffset.Parse(raw.ToString()!, CultureInfo.InvariantCulture);
+            if (connection.State != ConnectionState.Closed)
+                await connection.CloseAsync();
         }
-
-        return Convert.ChangeType(raw, t, CultureInfo.InvariantCulture);
     }
 }

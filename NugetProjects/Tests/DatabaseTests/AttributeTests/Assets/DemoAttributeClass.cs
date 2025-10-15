@@ -9,7 +9,7 @@ public class DemoAttributeClass()
     public int Id { get; set; }
 
     [Column(Name = "DemoColumn")]
-    public string Name { get; init; }
+    public string Name { get; set; }
 
     [Column]
     public int Age { get; set; }

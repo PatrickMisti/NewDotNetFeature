@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
 using FhOoeProjectPackages.Database.DbAttributes;
-using FhOoeProjectPackages.Database.Utilities;
-using Newtonsoft.Json.Converters;
 using NUnit.Framework;
 using Tests.DatabaseTests.AttributeTests.Assets;
 
