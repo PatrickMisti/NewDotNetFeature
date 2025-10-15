@@ -7,7 +7,7 @@ using Tests.DatabaseTests.Assets;
 
 namespace Tests.DatabaseTests;
 
-internal class DbContextTests
+public class DbContextTests
 {
     DbConnection _connection = null!;
     private readonly string _connectionString = "Data Source=TestDb;Mode=Memory;Cache=Shared";
