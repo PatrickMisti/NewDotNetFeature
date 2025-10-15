@@ -31,6 +31,12 @@ jobs:
         run: dotnet test NugetProjects/Tests/Tests.csproj --configuration Release --no-build
 
   pack-and-push:
+    -name: Debug ref
+    run: | 
+      echo "github.event_name = ${{ github.event_name }}"
+      echo "github.ref        = ${{ github.ref }}"
+
+
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build-test
     runs-on: ubuntu-latest
