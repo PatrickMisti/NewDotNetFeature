@@ -1,13 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.9" />
-  </ItemGroup>
+		<!--Nuget-Metadaten-->
+		<PackageId>Ado.FhOOe.at</PackageId>
+		<Author>Patrick Mistlberger</Author>
+		<Company>Student FhOoe</Company>
+		<Description>Wrapper für Ado.Net</Description>
+		<PackageTag>Ado-Wrapper</PackageTag>
+		<RepositoryUrl>https://github.com/PatrickMisti/NewDotNetFeature</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.9" />
+	</ItemGroup>
 </Project>

@@ -8,8 +8,8 @@ public class DemoAttributeClass()
     [Key(Name = "DemoKey")]
     public int Id { get; set; }
 
-    [Column(Name = "DemoColumn")]
-    public string Name { get; set; }
+    [Column(Name = "DemoColumn")] 
+    public string Name { get; set; } = string.Empty;
 
     [Column]
     public int Age { get; set; }
