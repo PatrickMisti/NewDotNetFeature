@@ -28,19 +28,6 @@ internal class DbContextTests
         await _connection.DisposeAsync();
     }
 
-    private static async Task CreateTable(DbConnection connection)
-    {
-        await using var cmd = connection.CreateCommand();
-        cmd.CommandText = """
-                          CREATE TABLE DemoAttributeClass (
-                              DemoKey INTEGER PRIMARY KEY AUTOINCREMENT,
-                              DemoColumn TEXT NOT NULL,
-                              Age INTEGER NOT NULL
-                          );
-                          """;
-        await cmd.ExecuteNonQueryAsync();
-    }
-
     [Test]
     public async Task AddAsync_Then_GetAllAsync_Works_With_Sqlite_InMemory()
     {
