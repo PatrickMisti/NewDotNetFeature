@@ -18,7 +18,6 @@ internal class DbContextTests
         Batteries.Init();
         _connection = new SqliteConnection(_connectionString);
         await _connection.OpenAsync();
-        //await CreateTable(_connection);
     }
 
     [TearDown]
