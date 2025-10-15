@@ -45,11 +45,11 @@ jobs:
 
       - name: Read version from version.txt
         id: read_version
-        run: echo "version=$(cat NewDotNetFeature/NugetProjects/version.txt)" >> $GITHUB_OUTPUT
+        run: echo "version=$(cat NugetProjects/version.txt)" >> $GITHUB_OUTPUT
 
       - name: Debug files
         run: ls -R
-        
+
       - name: Debug version
         run: echo "Version is ${{ steps.read_version.outputs.version }}"
 
