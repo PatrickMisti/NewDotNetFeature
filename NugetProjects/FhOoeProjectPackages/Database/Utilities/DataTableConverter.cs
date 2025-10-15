@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace FhOoeProjectPackages.Database.Utilities;
 
-public class DataTableConverter
+internal class DataTableConverter
 {
     internal static IEnumerable<T> MapRows<T>(DataTable table, TableConverter classInfo) where T : new()
     {

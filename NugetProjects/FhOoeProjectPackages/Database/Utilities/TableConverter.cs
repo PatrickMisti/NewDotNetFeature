@@ -3,7 +3,7 @@ using FhOoeProjectPackages.Database.DbAttributes;
 
 namespace FhOoeProjectPackages.Database.Utilities;
 
-public class TableConverter
+internal class TableConverter
 {
     public IList<ColumnDataSet> Columns { get; init; }
 
