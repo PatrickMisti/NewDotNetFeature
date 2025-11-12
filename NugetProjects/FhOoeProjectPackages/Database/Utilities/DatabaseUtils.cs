@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Data.Common;
+using System.Reflection;
 using System.Text;
+using FhOoeProjectPackages.Database.DbAttributes;
 
 namespace FhOoeProjectPackages.Database.Utilities;
 
@@ -39,7 +41,7 @@ public class DatabaseUtils
         return builder.ToString();
     }
 
-    public static string GenerateTableStmt<T>()
+    public static string GenerateTableStmt<T>(string providerName)
     {
         var tableName = AttributeConverter.GetTableName<T>();
         var fields = AttributeConverter.GetFieldInfos<T>();
@@ -47,47 +49,86 @@ public class DatabaseUtils
 
         var prim = fields.First(x => x.IsPrimaryKey);
         var foreign = fields.FirstOrDefault(x => x.IsForeignKey);
-        var columns = fields.Except([prim, foreign]);
+
+        var columns = fields
+            .Where(x => x.Prop.GetCustomAttribute<ColumnAttribute>() is not null &&
+                        !ReferenceEquals(x, prim) && !ReferenceEquals(x, foreign));
 
         builder.Append($"CREATE TABLE {tableName} (");
-        builder.Append($"{prim.Name} INT");
-        if (prim.AutoIncrement)
-            builder.Append(" IDENTITY(1,1)");
-        builder.Append(" PRIMARY KEY, ");
+        builder.Append(GetIdDefinition(providerName, prim.Name, prim.AutoIncrement));
+        builder.Append(", ");
 
         foreach (var column in columns)
         {
-            builder.Append($"{column.Name} {GetSqlType(column.Prop.PropertyType)}");
+            builder.Append($"{column.Name} {GetSqlTypeForProvider(column.Prop.PropertyType, providerName)}");
             if (!column.IsNullable)
                 builder.Append(" NOT NULL");
             builder.Append(", ");
         }
 
-        if (foreign != null)
+        if (foreign != null && foreign.ReferenceTable is not null)
         {
-            builder.Append($"{foreign.Name} {GetSqlType(foreign.Prop.PropertyType)}, ");
-            builder.Append($"FOREIGN KEY ({foreign.Name}) REFERENCES {foreign.ReferenceTable}({foreign.Name}), ");
+            builder.Append($"{foreign.Name} {GetSqlTypeForProvider(foreign.Prop.PropertyType, providerName)}, ");
+
+            var foreignTableName = AttributeConverter.GetTableName(foreign.ReferenceTable);
+            var foreignKey = AttributeConverter.GetFieldInfos(foreign.ReferenceTable)
+                .FirstOrDefault(x => x.IsPrimaryKey)
+                ?? throw new ArgumentException("Class has no id");
+
+            builder.Append($"FOREIGN KEY ({foreign.Name}) REFERENCES {foreignTableName}({foreignKey.Name}), ");
         }
 
-        // Remove last comma and space
         builder.Length -= 2;
         builder.Append(");");
+
         return builder.ToString();
     }
 
-    private static string GetSqlType(Type propPropertyType)
+    private static string GetSqlTypeForProvider(Type t, string providerName)
     {
-        if (typeof(int) == propPropertyType)
-            return "INTEGER";
-        if (typeof(string) == propPropertyType)
+        var p = providerName.ToLower();
+
+        if (t == typeof(int))
+            return p.Contains("sqlite") ? "INTEGER" : "INT"; // wichtig für SQLite
+
+        if (t == typeof(string))
             return "VARCHAR(255)";
-        if (typeof(DateTime) == propPropertyType)
-            return "DATETIME";
-        if (typeof(bool) == propPropertyType)
-            return "BIT";
-        if (typeof(double) == propPropertyType)
-            return "FLOAT";
-        throw new NotSupportedException($"The property type {propPropertyType.Name} is not supported.");
+        if (t == typeof(DateTime))
+            return p.Contains("sqlite") ? "TEXT" : "DATETIME"; // SQLite speichert Dates oft als TEXT/NUMERIC
+        if (t == typeof(bool))
+            return p.Contains("sqlite") ? "INTEGER" : "BIT";   // SQLite hat kein BIT; 0/1 in INTEGER
+        if (t == typeof(double))
+            return p.Contains("sqlite") ? "REAL" : "FLOAT";
+
+        throw new NotSupportedException($"The property type {t.Name} is not supported.");
+    }
+
+    private static string GetIdDefinition(string providerName, string columnName, bool autoIncrement)
+    {
+        var p = providerName.ToLower();
+
+        if (!autoIncrement)
+        {
+            var baseType = p.Contains("sqlite") ? "INTEGER" : "INT";
+            return $"{columnName} {baseType} PRIMARY KEY";
+        }
+
+        if (p.Contains("sqlite"))
+            return $"{columnName} INTEGER PRIMARY KEY AUTOINCREMENT";
+
+        if (p.Contains("sqlclient"))
+            return $"{columnName} INT IDENTITY(1,1) PRIMARY KEY";
+
+        if (p.Contains("mysql"))
+            return $"{columnName} INT AUTO_INCREMENT PRIMARY KEY";
+
+        if (p.Contains("npgsql") || p.Contains("postgres"))
+            return $"{columnName} INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY";
+
+        if (p.Contains("oracle"))
+            return $"{columnName} NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY";
+
+        return $"{columnName} INT PRIMARY KEY";
     }
 }
 

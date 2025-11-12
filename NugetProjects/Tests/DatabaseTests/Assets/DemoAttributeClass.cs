@@ -27,7 +27,7 @@ public class DemoAttributeClass()
 [Table(Name = "CustomTableName")]
 public class DemoAttributeClassWithCustomTableName
 {
-    [Key(AutoIncrement = false)]
+    [Key]
     public Guid Id { get; set; }
 
     [Column(Name = "CustomColumnName", IsNullable = false)]
@@ -37,14 +37,17 @@ public class DemoAttributeClassWithCustomTableName
 }
 
 [Table]
-public class DemoAttributeAsChildClass
+public class DemoAttributeAsChildClass : BaseClass
 {
-    [Key]
-    public int Id { get; set; }
-
     [Column]
     public string Description { get; set; } = string.Empty;
 
     [ForeignKey(ReferenceTable = typeof(DemoAttributeClassWithCustomTableName))]
     public int ParentId { get; set; }
+}
+
+public class BaseClass
+{
+    [Key]
+    public int Id { get; set; }
 }

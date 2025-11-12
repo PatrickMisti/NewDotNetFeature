@@ -14,17 +14,19 @@ public class DbContextTests
     private readonly string _connectionString = "Data Source=TestDb;Mode=Memory;Cache=Shared";
     private readonly string _providerString = "Microsoft.Data.Sqlite";
     private DbContext _context;
+    private SqliteConnection _keeperConnection;
 
     [SetUp]
     public async Task Setup()
     {
         _context = new DbContext(_providerString, _connectionString);
 
-        await using var conn = new SqliteConnection(_connectionString);
-        conn.Open();
-        await using var cmd = conn.CreateCommand();
-        var i = DatabaseUtils.GenerateTableStmt<DemoAttributeClass>();
-        cmd.CommandText = i;
+        // Open and keep this connection alive until TearDown
+        _keeperConnection = new SqliteConnection(_connectionString);
+        await _keeperConnection.OpenAsync();
+
+        await using var cmd = _keeperConnection.CreateCommand();
+        cmd.CommandText = DatabaseUtils.GenerateTableStmt<DemoAttributeClass>(providerName: _providerString);
         await cmd.ExecuteNonQueryAsync();
     }
 
@@ -32,6 +34,15 @@ public class DbContextTests
     public void TearDown()
     {
         _context.Dispose();
+        _keeperConnection.Close();
+    }
+
+    [Test]
+    public void Test_Table_Generator()
+    {
+        var i = DatabaseUtils.GenerateTableStmt<DemoAttributeAsChildClass>(_providerString);
+
+        Assert.That(i, Is.Not.Null);
     }
 
     [Test]

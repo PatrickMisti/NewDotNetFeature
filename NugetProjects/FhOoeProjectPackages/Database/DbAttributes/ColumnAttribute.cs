@@ -20,6 +20,7 @@ public class ColumnAttribute : BaseAttribute
 public class KeyAttribute : BaseAttribute
 {
     public bool AutoIncrement { get; set; } = true;
+    public bool IsPrimaryKey => true;
 }
 
 [AttributeUsage(AttributeTargets.Property)]

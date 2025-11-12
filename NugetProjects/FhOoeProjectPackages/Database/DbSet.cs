@@ -1,6 +1,7 @@
 ﻿using FhOoeProjectPackages.Database.Utilities;
 using System.Data;
 using System.Data.Common;
+using System.Reflection;
 using FhOoeProjectPackages.Database.DbAttributes;
 
 namespace FhOoeProjectPackages.Database;
@@ -24,7 +25,7 @@ public class DbSet<T> where T : class
 
         foreach (var col in _fieldInfos)
         {
-            if (!col.Prop.CanWrite) continue;
+            if (!col.Prop.CanWrite || !HasAttribute(col.Prop)) continue;
 
             var value = read[col.Name];
             col.Prop.SetValue(
@@ -36,6 +37,10 @@ public class DbSet<T> where T : class
 
         return instance;
     }
+
+    private bool HasAttribute(PropertyInfo info) => info.GetCustomAttribute<KeyAttribute>() is not null ||
+                                                  info.GetCustomAttribute<ColumnAttribute>() is not null ||
+                                                  info.GetCustomAttribute<ForeignKeyAttribute>() is not null;
 
     private void UpdateSqlStmtToCommand(DbCommand command, string fieldName, object value)
     {
@@ -74,7 +79,7 @@ public class DbSet<T> where T : class
 
     public async Task<int?> AddAsync(T element, CancellationToken token = default)
     {
-        var nonAutoIncList = _fieldInfos.Where(x => !x.AutoIncrement).ToList();
+        var nonAutoIncList = _fieldInfos.Where(x => !x.AutoIncrement && x.Prop.GetCustomAttribute<BaseAttribute>() is not null).ToList();
         var sqlStmt = DatabaseUtils.GenerateInsertStmt(
             tableName: _tableName,
             id: _fieldInfos.Single(x => x.IsPrimaryKey).Name,
@@ -87,8 +92,8 @@ public class DbSet<T> where T : class
         command.CommandText = sqlStmt;
 
         UpdateEntitySqlStmtToCommand(command, nonAutoIncList, element);
-
-        return (int?)await command.ExecuteScalarAsync(token);
+        var result = await command.ExecuteScalarAsync(token);
+        return result is int resultInt ? resultInt : null;
     }
 
     public async Task<T?> GetByIdAsync(int id, CancellationToken token = default)
@@ -113,7 +118,7 @@ public class DbSet<T> where T : class
     {
         var keyCol = _fieldInfos.First(c => c.IsPrimaryKey);
 
-        var nonPrimFields = _fieldInfos.Where(c => !c.IsPrimaryKey).ToList();
+        var nonPrimFields = _fieldInfos.Where(c => !c.IsPrimaryKey && HasAttribute(c.Prop)).ToList();
         if (nonPrimFields.Count == 0) return false;
 
         var sqlStmt = DatabaseUtils.GenerateUpdateStmt(
@@ -125,7 +130,7 @@ public class DbSet<T> where T : class
         await using var command = _connection.CreateCommand();
         command.CommandText = sqlStmt;
 
-        UpdateEntitySqlStmtToCommand(command, nonPrimFields, element);
+        UpdateEntitySqlStmtToCommand(command,[..nonPrimFields, keyCol], element);
         int affected = await command.ExecuteNonQueryAsync(token);
 
         return affected > 0;

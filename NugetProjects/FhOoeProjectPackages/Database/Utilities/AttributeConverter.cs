@@ -5,18 +5,25 @@ namespace FhOoeProjectPackages.Database.Utilities;
 
 internal class AttributeConverter
 {
-    public static string GetTableName<T>()
+    public static string GetTableName(Type type)
     {
-        var type = typeof(T);
-
         var table = type.GetCustomAttribute<TableAttribute>();
         
         return table?.Name ?? type.Name;
     }
 
+    public static string GetTableName<T>()
+    {
+        return GetTableName(typeof(T));
+    }
+
     public static ICollection<ColumnField> GetFieldInfos<T>()
     {
-        var type = typeof(T);
+        return GetFieldInfos(typeof(T));
+    }
+
+    public static ICollection<ColumnField> GetFieldInfos(Type type)
+    {
         var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         var fields = new List<ColumnField>();
