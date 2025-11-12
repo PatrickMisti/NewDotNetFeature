@@ -1,196 +1,149 @@
 ﻿using FhOoeProjectPackages.Database.Utilities;
 using System.Data;
 using System.Data.Common;
+using FhOoeProjectPackages.Database.DbAttributes;
 
 namespace FhOoeProjectPackages.Database;
 
-public class DbSet<T> where T : class, new()
+public class DbSet<T> where T : class
 {
     private readonly DbConnection _connection;
+    private readonly string _tableName;
+    private readonly ICollection<ColumnField> _fieldInfos;
+
     public DbSet(DbConnection connection)
     {
         _connection = connection;
-        var table = DataTableConverter.CreateTableFromClass(TableConverter.GetClassInfo<T>());
-        DataTableConverter.EnsureTableExists(_connection, table);
+        _tableName = AttributeConverter.GetTableName<T>();
+        _fieldInfos = AttributeConverter.GetFieldInfos<T>();
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    private T FillInstanceFromDb(DbDataReader read)
     {
-        var classInfo = TableConverter.GetClassInfo<T>();
-        var sqlStmt = $"SELECT * from {classInfo.TableName}";
+        var instance = Activator.CreateInstance<T>();
 
-        var table = new DataTable();
-
-        try
+        foreach (var col in _fieldInfos)
         {
-            await _connection.OpenAsync();
+            if (!col.Prop.CanWrite) continue;
 
-            await using var command = _connection.CreateCommand();
-            command.CommandText = sqlStmt;
-            command.CommandType = CommandType.Text;
-            await using var read = await command.ExecuteReaderAsync();
-
-            table.Load(read);
-        }
-        finally
-        {
-            if (_connection.State != ConnectionState.Closed)
-                await _connection.CloseAsync();
+            var value = read[col.Name];
+            col.Prop.SetValue(
+                instance, 
+                value == DBNull.Value 
+                    ? null 
+                    : Convert.ChangeType(value, col.Prop.PropertyType));
         }
 
-        return DataTableConverter.MapRows<T>(table, classInfo);
+        return instance;
     }
 
-    public async Task<T?> AddAsync(T element)
+    private void UpdateSqlStmtToCommand(DbCommand command, string fieldName, object value)
     {
-        var classInfo = TableConverter.GetClassInfo<T>();
-        var insertCols = classInfo.Columns.Where(c => !c.AutoIncr).ToList();
+        var p = command.CreateParameter();
+        p.ParameterName = $"@{fieldName}";
+        p.Value = value;
+        command.Parameters.Add(p);
+    }
 
-        var columnNames = string.Join(", ", insertCols.Select(c => c.Name));
-        var paramNames = string.Join(", ", insertCols.Select(c => "@" + c.Name));
-
-
-        var (sqlStmt, withReturn) = DataTableConverter.GetInsertQueryFromProvider(_connection, classInfo.TableName, columnNames, paramNames);
-        var table = new DataTable();
-
-        try
+    private void UpdateEntitySqlStmtToCommand(DbCommand command, ICollection<ColumnField> fields, T element)
+    {
+        foreach (var field in fields)
         {
-            await _connection.OpenAsync();
-            await using var command = _connection.CreateCommand();
-            command.CommandText = sqlStmt;
-            command.CommandType = CommandType.Text;
-
-            foreach (var col in insertCols)
-            {
-                var prop = classInfo.FindPropertyInfo(col);
-                var value = prop.GetValue(element) ?? DBNull.Value;
-
-                var param = command.CreateParameter();
-                param.ParameterName = "@" + col.Name;
-                param.Value = value;
-                command.Parameters.Add(param);
-            }
-
-            if (withReturn)
-            {
-                await using var result = await command.ExecuteReaderAsync();
-                table.Load(result);
-                return DataTableConverter.MapRows<T>(table, classInfo).FirstOrDefault();
-            }
-            var affected = await command.ExecuteNonQueryAsync();
-            return affected > 0 ? element : null;
-        }
-        finally
-        {
-            if (_connection.State != ConnectionState.Closed)
-                await _connection.CloseAsync();
+            var value = field.Prop.GetValue(element) ?? DBNull.Value;
+            UpdateSqlStmtToCommand(command, field.Name, value);
         }
     }
 
-    public async Task<T?> GetByIdAsync(int id)
+    public async Task<IEnumerable<T>> GetAllAsync(CancellationToken token = default)
     {
-        var classInfo = TableConverter.GetClassInfo<T>();
-        var keyColumn = classInfo.Columns.First(x => x.IsPrim);
-        var sqlStmt = $"SELECT * from {classInfo.TableName} where {keyColumn.Name} = @Id";
-        var table = new DataTable();
-        try
-        {
-            await _connection.OpenAsync();
+        var sqlStmt = $"SELECT * from {_tableName}";
 
-            await using var command = _connection.CreateCommand();
-            command.CommandText = sqlStmt;
-            command.CommandType = CommandType.Text;
+        await _connection.OpenAsync(token);
 
-            var p = command.CreateParameter();
-            p.ParameterName = "@Id";
-            p.Value = id;
-            command.Parameters.Add(p);
+        await using var command = _connection.CreateCommand();
+        command.CommandText = sqlStmt;
+        await using var read = await command.ExecuteReaderAsync(token);
 
-            await using var reader = await command.ExecuteReaderAsync();
-            table.Load(reader);
-        }
-        finally
-        {
-            if (_connection.State != ConnectionState.Closed)
-                await _connection.CloseAsync();
-        }
+        var results = new List<T>();
 
-        return DataTableConverter.MapRows<T>(table, classInfo).FirstOrDefault();
+        while (await read.ReadAsync(token))
+            results.Add(FillInstanceFromDb(read));
+        
+        return results;
     }
 
-    public async Task<T?> UpdateAsync(T element)
+    public async Task<int?> AddAsync(T element, CancellationToken token = default)
     {
-        var classInfo = TableConverter.GetClassInfo<T>();
+        var nonAutoIncList = _fieldInfos.Where(x => !x.AutoIncrement).ToList();
+        var sqlStmt = DatabaseUtils.GenerateInsertStmt(
+            tableName: _tableName,
+            id: _fieldInfos.Single(x => x.IsPrimaryKey).Name,
+            columns: nonAutoIncList.Select(x => x.Name).ToList(),
+            connection: _connection);
 
-        var keyCol = classInfo.Columns.First(c => c.IsPrim);
-        var keyProp = classInfo.FindKeyPropertyInfo();
-        var keyValue = keyProp.GetValue(element) ?? throw new InvalidOperationException("Primary key value is null.");
 
-        var updatableCols = classInfo.Columns.Where(c => !c.IsPrim).ToList();
-        if (updatableCols.Count == 0) return null;
+        await _connection.OpenAsync(token);
+        await using var command = _connection.CreateCommand();
+        command.CommandText = sqlStmt;
 
-        var setClause = string.Join(", ", updatableCols.Select(c => $"{c.Name} = @{c.Name}"));
-        var sqlStmt = $"UPDATE {classInfo.TableName} SET {setClause} Where {keyCol.Name} = @Key";
+        UpdateEntitySqlStmtToCommand(command, nonAutoIncList, element);
 
-        try
-        {
-            await _connection.OpenAsync();
-            await using var command = _connection.CreateCommand();
-            command.CommandText = sqlStmt;
-            command.CommandType = CommandType.Text;
-
-            foreach (var col in updatableCols)
-            {
-                var prop = classInfo.FindPropertyInfo(col);
-                var value = prop.GetValue(element) ?? DBNull.Value;
-
-                var p = command.CreateParameter();
-                p.ParameterName = "@" + col.Name;
-                p.Value = value;
-                command.Parameters.Add(p);
-            }
-
-            var keyParam = command.CreateParameter();
-            keyParam.ParameterName = "@Key";
-            keyParam.Value = keyValue;
-            command.Parameters.Add(keyParam);
-            var affected = await command.ExecuteNonQueryAsync();
-
-            return affected > 0 ? element : null;
-        }
-        finally
-        {
-            if (_connection.State != ConnectionState.Closed)
-                await _connection.CloseAsync();
-        }
+        return (int?)await command.ExecuteScalarAsync(token);
     }
 
-    public async Task<bool> DeleteByIdAsync(int id)
+    public async Task<T?> GetByIdAsync(int id, CancellationToken token = default)
     {
-        var classInfo = TableConverter.GetClassInfo<T>();
-        var keyCol = classInfo.Columns.First(c => c.IsPrim);
-        var sqlStmt = $"DELETE FROM {classInfo.TableName} WHERE {keyCol.Name} = @Id";
+        var keyColumn = _fieldInfos.First(x => x.IsPrimaryKey);
+        var sqlStmt = $"SELECT * from {_tableName} where {keyColumn.Name} = @{keyColumn.Name}";
 
-        try
-        {
-            await _connection.OpenAsync();
+        await _connection.OpenAsync(token);
+        await using var command = _connection.CreateCommand();
+        command.CommandText = sqlStmt;
 
-            await using var command = _connection.CreateCommand();
-            command.CommandText = sqlStmt;
-            command.CommandType = CommandType.Text;
-            var p = command.CreateParameter();
+        UpdateSqlStmtToCommand(command, keyColumn.Name, id);
 
-            p.ParameterName = "@Id";
-            p.Value = id;
-            command.Parameters.Add(p);
-            var affected = await command.ExecuteNonQueryAsync();
+        await using var reader = await command.ExecuteReaderAsync(token);
 
-            return affected > 0;
-        }
-        finally
-        {
-            if (_connection.State != ConnectionState.Closed)
-                await _connection.CloseAsync();
-        }
+        if (!await reader.ReadAsync(token)) return null;
+
+        return FillInstanceFromDb(reader);
+    }
+
+    public async Task<bool> UpdateAsync(T element, CancellationToken token = default)
+    {
+        var keyCol = _fieldInfos.First(c => c.IsPrimaryKey);
+
+        var nonPrimFields = _fieldInfos.Where(c => !c.IsPrimaryKey).ToList();
+        if (nonPrimFields.Count == 0) return false;
+
+        var sqlStmt = DatabaseUtils.GenerateUpdateStmt(
+            tableName: _tableName,
+            id: keyCol.Name,
+            columns: nonPrimFields.Select(c => c.Name).ToList());
+
+        await _connection.OpenAsync(token);
+        await using var command = _connection.CreateCommand();
+        command.CommandText = sqlStmt;
+
+        UpdateEntitySqlStmtToCommand(command, nonPrimFields, element);
+        int affected = await command.ExecuteNonQueryAsync(token);
+
+        return affected > 0;
+    }
+
+    public async Task<bool> DeleteByIdAsync(int id, CancellationToken token = default)
+    {
+        var keyCol = _fieldInfos.First(c => c.IsPrimaryKey);
+        var sqlStmt = $"DELETE FROM {_tableName} WHERE {keyCol.Name} = @{keyCol.Name}";
+
+        await _connection.OpenAsync(token);
+        await using var command = _connection.CreateCommand();
+        command.CommandText = sqlStmt;
+
+        UpdateSqlStmtToCommand(command, keyCol.Name, id);
+
+        var affected = await command.ExecuteNonQueryAsync(token);
+
+        return affected > 0;
     }
 }

@@ -23,3 +23,28 @@ public class DemoAttributeClass()
         IgnoredProperty = ignored;
     }
 }
+
+[Table(Name = "CustomTableName")]
+public class DemoAttributeClassWithCustomTableName
+{
+    [Key(AutoIncrement = false)]
+    public Guid Id { get; set; }
+
+    [Column(Name = "CustomColumnName", IsNullable = false)]
+    public string Name { get; set; } = string.Empty;
+    
+    public virtual List<DemoAttributeAsChildClass>? Children { get; set; }
+}
+
+[Table]
+public class DemoAttributeAsChildClass
+{
+    [Key]
+    public int Id { get; set; }
+
+    [Column]
+    public string Description { get; set; } = string.Empty;
+
+    [ForeignKey(ReferenceTable = typeof(DemoAttributeClassWithCustomTableName))]
+    public int ParentId { get; set; }
+}

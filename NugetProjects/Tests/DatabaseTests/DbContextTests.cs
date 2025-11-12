@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using FhOoeProjectPackages.Database;
+using FhOoeProjectPackages.Database.Utilities;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
 using Tests.DatabaseTests.Assets;
@@ -10,29 +11,33 @@ namespace Tests.DatabaseTests;
 [Parallelizable(ParallelScope.None)]
 public class DbContextTests
 {
-    DbConnection _connection = null!;
     private readonly string _connectionString = "Data Source=TestDb;Mode=Memory;Cache=Shared";
+    private readonly string _providerString = "Microsoft.Data.Sqlite";
+    private DbContext _context;
 
     [SetUp]
     public async Task Setup()
     {
-        _connection = new SqliteConnection(_connectionString);
-        await _connection.OpenAsync();
+        _context = new DbContext(_providerString, _connectionString);
+
+        await using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        await using var cmd = conn.CreateCommand();
+        var i = DatabaseUtils.GenerateTableStmt<DemoAttributeClass>();
+        cmd.CommandText = i;
+        await cmd.ExecuteNonQueryAsync();
     }
 
     [TearDown]
-    public async Task TearDown()
+    public void TearDown()
     {
-        await _connection.CloseAsync();
-        await _connection.DisposeAsync();
+        _context.Dispose();
     }
 
     [Test]
     public async Task AddAsync_Then_GetAllAsync_Works_With_Sqlite_InMemory()
     {
-        await using var conn = new SqliteConnection(_connectionString);
-        using var context = new DbContext(conn);
-        var set = context.Set<DemoAttributeClass>();
+        var set = _context.Set<DemoAttributeClass>();
 
         // Insert
         var entity = new DemoAttributeClass("hallo", 23, "ignored");
@@ -53,9 +58,7 @@ public class DbContextTests
     [Test]
     public async Task Check_Get_Value_By_Id()
     {
-        await using var conn = new SqliteConnection(_connectionString);
-        using var context = new DbContext(conn);
-        var set = context.Set<DemoAttributeClass>();
+        var set = _context.Set<DemoAttributeClass>();
 
         // Insert
         var entity = new DemoAttributeClass("hallo", 23, "ignored");
@@ -77,9 +80,7 @@ public class DbContextTests
     [Test]
     public async Task Check_Add_And_Remove_Value()
     {
-        await using var conn = new SqliteConnection(_connectionString);
-        using var context = new DbContext(conn);
-        var set = context.Set<DemoAttributeClass>();
+        var set = _context.Set<DemoAttributeClass>();
 
         var entity = new DemoAttributeClass("hallo", 23, "ignored");
         await set.AddAsync(entity);
@@ -97,9 +98,7 @@ public class DbContextTests
     [Test]
     public async Task Check_Add_And_Update_Value()
     {
-        await using var conn = new SqliteConnection(_connectionString);
-        using var context = new DbContext(conn);
-        var set = context.Set<DemoAttributeClass>();
+        var set = _context.Set<DemoAttributeClass>();
 
         var entity = new DemoAttributeClass("hallo", 23, "ignored");
         await set.AddAsync(entity);
@@ -111,13 +110,6 @@ public class DbContextTests
 
         var updated = await set.UpdateAsync(toUpdate);
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(updated, Is.Not.Null);
-            Assert.That(updated!.Id, Is.EqualTo(toUpdate.Id));
-            Assert.That(updated!.Name, Is.EqualTo("Seruvs"));
-            Assert.That(updated!.Age, Is.EqualTo(23));
-        });
-
+        Assert.That(updated, Is.True);
     }
 }

@@ -1,9 +1,15 @@
-﻿namespace FhOoeProjectPackages.Database.DbAttributes;
+﻿using System.Reflection;
 
-[AttributeUsage(AttributeTargets.Property)]
-public class ColumnAttribute : Attribute
+namespace FhOoeProjectPackages.Database.DbAttributes;
+
+public abstract class BaseAttribute : Attribute
 {
     public string? Name { get; set; } = null;
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class ColumnAttribute : BaseAttribute
+{
     public bool IsPrimaryKey { get; set; } = false;
     public bool IsForeignKey { get; set; } = false;
     public bool IsNullable { get; set; } = true;
@@ -11,8 +17,16 @@ public class ColumnAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-public class KeyAttribute : Attribute
+public class KeyAttribute : BaseAttribute
 {
-    public string? Name { get; set; }
     public bool AutoIncrement { get; set; } = true;
 }
+
+[AttributeUsage(AttributeTargets.Property)]
+public class ForeignKeyAttribute : BaseAttribute
+{
+    public required Type ReferenceTable { get; set; }
+}
+
+
+public record ColumnField(string FieldName, string Name, bool IsPrimaryKey, bool IsForeignKey, bool IsNullable, bool AutoIncrement, Type? ReferenceTable, PropertyInfo Prop);
