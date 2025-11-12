@@ -20,7 +20,7 @@ public class DbSet<T> where T : class
         _fieldInfos = AttributeConverter.GetFieldInfos<T>();
     }
 
-    private static object FillInstanceFromDb(Type type, DbDataReader read, IEnumerable<ColumnField> fieldInfos, Func<PropertyInfo,bool> checkAttribute)
+    private static object? FillInstanceFromDb(Type type, DbDataReader read, IEnumerable<ColumnField> fieldInfos, Func<PropertyInfo,bool> checkAttribute)
     {
         var instance = Activator.CreateInstance(type);
 
@@ -87,7 +87,11 @@ public class DbSet<T> where T : class
 
         var results = new List<T>();
         while (await read.ReadAsync(token))
-            results.Add((T)FillInstanceFromDb(typeof(T), read,_fieldInfos, HasAttribute));
+        {
+            var item = (T?)FillInstanceFromDb(typeof(T), read, _fieldInfos, HasAttribute);
+            if (item is null) continue;
+            results.Add(item);
+        }
         
         if (enableEagerLoading)
             await EagerLoadRelationsAsync(results, token);
@@ -134,7 +138,9 @@ public class DbSet<T> where T : class
 
         if (!await reader.ReadAsync(token)) return null;
 
-        var result = (T)FillInstanceFromDb(typeof(T), reader, _fieldInfos, HasAttribute);
+        var result = (T?)FillInstanceFromDb(typeof(T), reader, _fieldInfos, HasAttribute);
+        if (result is null) return null;
+
         if (enableEagerLoading)
             await EagerLoadRelationsAsync([result], token);
         return result;
@@ -223,7 +229,7 @@ public class DbSet<T> where T : class
                 var fkVal = (int)Convert.ChangeType(reader[fkName], typeof(int))!;
                 if (!childrenByParent.TryGetValue(fkVal, out var list))
                     list = childrenByParent[fkVal] = new List<object>();
-
+                if (child is null) continue;
                 list.Add(child);
             }
 
