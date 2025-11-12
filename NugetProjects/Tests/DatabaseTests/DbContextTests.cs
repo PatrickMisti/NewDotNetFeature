@@ -28,6 +28,10 @@ public class DbContextTests
         await using var cmd = _keeperConnection.CreateCommand();
         cmd.CommandText = DatabaseUtils.GenerateTableStmt<DemoAttributeClass>(providerName: _providerString);
         await cmd.ExecuteNonQueryAsync();
+        cmd.CommandText = DatabaseUtils.GenerateTableStmt<DemoAttributeClassWithCustomTableName>(_providerString);
+        await cmd.ExecuteNonQueryAsync();
+        cmd.CommandText = DatabaseUtils.GenerateTableStmt<DemoAttributeAsChildClass>(_providerString);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     [TearDown]
@@ -122,5 +126,55 @@ public class DbContextTests
         var updated = await set.UpdateAsync(toUpdate);
 
         Assert.That(updated, Is.True);
+    }
+
+    [Test]
+    public async Task Check_Eagle_Loading_From_OneToMany()
+    {
+        var set = _context.Set<DemoAttributeClassWithCustomTableName>();
+        var setChild = _context.Set<DemoAttributeAsChildClass>();
+
+        var entity = new DemoAttributeClassWithCustomTableName
+        {
+            Name = "ParentEntity",
+            Children = new List<DemoAttributeAsChildClass>
+            {
+                new DemoAttributeAsChildClass { Description = "Child 1" },
+                new DemoAttributeAsChildClass { Description = "Child 2" }
+            }
+        };
+        var entity2 = new DemoAttributeClassWithCustomTableName
+        {
+            Name = "ParentEntity2",
+            Children = new List<DemoAttributeAsChildClass>
+            {
+                new DemoAttributeAsChildClass { Description = "Child 3" },
+                new DemoAttributeAsChildClass { Description = "Child 4" }
+            }
+        };
+
+        entity.Id = (int)(await set.AddAsync(entity))!;
+        entity2.Id = (int)(await set.AddAsync(entity2))!;
+        foreach (var e in entity.Children)
+        {
+            e.ParentId = entity.Id;
+            await setChild.AddAsync(e);
+        }
+        foreach (var e in entity2.Children)
+        {
+            e.ParentId = entity2.Id;
+            await setChild.AddAsync(e);
+        }
+
+        var loadedEntity = await set.GetByIdAsync(entity.Id, enableEagerLoading: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(loadedEntity, Is.Not.Null);
+            Assert.That(loadedEntity!.Children, Is.Not.Null);
+            Assert.That(loadedEntity.Children!.Count, Is.EqualTo(2));
+            Assert.That(loadedEntity.Children![0].Description, Is.EqualTo("Child 1"));
+            Assert.That(loadedEntity.Children![1].Description, Is.EqualTo("Child 2"));
+        });
     }
 }

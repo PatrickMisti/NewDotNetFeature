@@ -29,5 +29,25 @@ public class ForeignKeyAttribute : BaseAttribute
     public required Type ReferenceTable { get; set; }
 }
 
+[AttributeUsage(AttributeTargets.Property)]
+public class OneToManyAttribute : Attribute
+{
+    public required Type TargetEntity { get; init; }
+    public required string MappedBy { get; init; }
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class ManyToOneAttribute : Attribute
+{
+    public required Type TargetEntity { get; init; }
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class OneToOneAttribute : Attribute
+{
+    public required Type TargetEntity { get; init; }
+    public string? ForeignKey { get; set; }
+}
+
 
 public record ColumnField(string FieldName, string Name, bool IsPrimaryKey, bool IsForeignKey, bool IsNullable, bool AutoIncrement, Type? ReferenceTable, PropertyInfo Prop);

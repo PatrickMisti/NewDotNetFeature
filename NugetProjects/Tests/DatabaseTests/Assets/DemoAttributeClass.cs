@@ -25,14 +25,12 @@ public class DemoAttributeClass()
 }
 
 [Table(Name = "CustomTableName")]
-public class DemoAttributeClassWithCustomTableName
+public class DemoAttributeClassWithCustomTableName : BaseClass
 {
-    [Key]
-    public Guid Id { get; set; }
-
     [Column(Name = "CustomColumnName", IsNullable = false)]
     public string Name { get; set; } = string.Empty;
-    
+
+    [OneToMany(TargetEntity = typeof(DemoAttributeAsChildClass), MappedBy = "ParentId")]
     public virtual List<DemoAttributeAsChildClass>? Children { get; set; }
 }
 
@@ -50,4 +48,24 @@ public class BaseClass
 {
     [Key]
     public int Id { get; set; }
+}
+
+
+[Table]
+public class DemoAttributeOneToOneParent
+{
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey(ReferenceTable = typeof(DemoAttributeOneToOneChild))]
+    public int ChildId { get; set; }
+
+    [OneToOne(TargetEntity = typeof(DemoAttributeOneToOneChild), ForeignKey = "ParentId")]
+    public virtual DemoAttributeOneToOneChild? Child { get; set; }
+}
+
+[Table]
+public class DemoAttributeOneToOneChild : BaseClass
+{
+
 }

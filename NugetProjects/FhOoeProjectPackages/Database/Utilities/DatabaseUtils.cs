@@ -41,6 +41,11 @@ public class DatabaseUtils
         return builder.ToString();
     }
 
+    internal static IEnumerable<(PropertyInfo NavProp, OneToManyAttribute Meta)> GetOneToManyRelations(Type t) => t.GetProperties()
+            .Where(p => p.GetCustomAttribute<OneToManyAttribute>() is not null)
+            .Select(p => (p, p.GetCustomAttribute<OneToManyAttribute>()!));
+    
+
     public static string GenerateTableStmt<T>(string providerName)
     {
         var tableName = AttributeConverter.GetTableName<T>();
@@ -132,7 +137,7 @@ public class DatabaseUtils
     }
 }
 
-public static class DbProviderRegistration
+internal static class DbProviderRegistration
 {
     private static bool _sqliteRegistered;
 
@@ -147,4 +152,87 @@ public static class DbProviderRegistration
 
         _sqliteRegistered = true;
     }
+}
+
+internal static class DbValueConverter
+{
+    public static object? Convert(object raw, Type targetType)
+    {
+        if (raw is DBNull)
+        {
+            if (Nullable.GetUnderlyingType(targetType) != null)
+                return null;
+            return GetDefault(targetType);
+        }
+
+        var u = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+        if (u == typeof(bool))
+        {
+            return raw switch
+            {
+                bool b => b,
+                long l => l != 0,
+                int i => i != 0,
+                byte b2 => b2 != 0,
+                string s when bool.TryParse(s, out var bb) => bb,
+                string s when int.TryParse(s, out var ii) => ii != 0,
+                _ => System.Convert.ToBoolean(raw)
+            };
+        }
+
+        if (u == typeof(DateTime))
+        {
+            if (raw is DateTime dt) return dt;
+            if (raw is string s && DateTime.TryParse(s, out var parsed)) return parsed;
+            return System.Convert.ToDateTime(raw);
+        }
+
+        if (u.IsEnum)
+        {
+            if (raw is string es) return Enum.Parse(u, es, ignoreCase: true);
+            var num = System.Convert.ChangeType(raw, Enum.GetUnderlyingType(u));
+            return Enum.ToObject(u, num!);
+        }
+
+        if (u == typeof(Guid))
+        {
+            return raw switch
+            {
+                Guid g => g,
+                string s => Guid.Parse(s),
+                _ => new Guid((byte[])raw)
+            };
+        }
+
+#if NET6_0_OR_GREATER
+        if (u == typeof(DateOnly))
+        {
+            if (raw is DateOnly d) return d;
+            if (raw is DateTime dt) return DateOnly.FromDateTime(dt);
+            if (raw is string s && DateTime.TryParse(s, out var pdt)) return DateOnly.FromDateTime(pdt);
+        }
+        if (u == typeof(TimeOnly))
+        {
+            if (raw is TimeOnly t) return t;
+            if (raw is DateTime dt) return TimeOnly.FromDateTime(dt);
+            if (raw is string s && TimeSpan.TryParse(s, out var ts)) return TimeOnly.FromTimeSpan(ts);
+        }
+#endif
+        if (u == typeof(TimeSpan))
+        {
+            if (raw is TimeSpan ts) return ts;
+            if (raw is string s && TimeSpan.TryParse(s, out var pts)) return pts;
+        }
+
+        return System.Convert.ChangeType(raw, u);
+    }
+
+    public static T? Convert<T>(object raw)
+    {
+        var obj = Convert(raw, typeof(T));
+        return (T?)obj;
+    }
+
+    private static object? GetDefault(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
 }

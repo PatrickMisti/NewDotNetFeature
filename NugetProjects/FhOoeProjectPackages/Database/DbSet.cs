@@ -1,8 +1,9 @@
-﻿using FhOoeProjectPackages.Database.Utilities;
+﻿using System.Collections;
+using FhOoeProjectPackages.Database.DbAttributes;
+using FhOoeProjectPackages.Database.Utilities;
 using System.Data;
 using System.Data.Common;
 using System.Reflection;
-using FhOoeProjectPackages.Database.DbAttributes;
 
 namespace FhOoeProjectPackages.Database;
 
@@ -19,20 +20,26 @@ public class DbSet<T> where T : class
         _fieldInfos = AttributeConverter.GetFieldInfos<T>();
     }
 
-    private T FillInstanceFromDb(DbDataReader read)
+    private static object FillInstanceFromDb(Type type, DbDataReader read, IEnumerable<ColumnField> fieldInfos, Func<PropertyInfo,bool> checkAttribute)
     {
-        var instance = Activator.CreateInstance<T>();
+        var instance = Activator.CreateInstance(type);
 
-        foreach (var col in _fieldInfos)
+        foreach (var col in fieldInfos)
         {
-            if (!col.Prop.CanWrite || !HasAttribute(col.Prop)) continue;
+            if (!col.Prop.CanWrite || !checkAttribute.Invoke(col.Prop)) continue;
 
             var value = read[col.Name];
+
+            if (value is DBNull)
+            {
+                if (Nullable.GetUnderlyingType(col.Prop.PropertyType) != null)
+                    col.Prop.SetValue(instance, null);
+                continue;
+            }
+
             col.Prop.SetValue(
-                instance, 
-                value == DBNull.Value 
-                    ? null 
-                    : Convert.ChangeType(value, col.Prop.PropertyType));
+                instance,
+                DbValueConverter.Convert(value, col.Prop.PropertyType));
         }
 
         return instance;
@@ -59,27 +66,37 @@ public class DbSet<T> where T : class
         }
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(CancellationToken token = default)
+    private async Task EnsureOpenAsync(CancellationToken ct)
+    {
+        if (_connection.State != ConnectionState.Open)
+            await _connection.OpenAsync(ct);
+    }
+
+    public async Task<IEnumerable<T>> GetAllAsync(bool enableEagerLoading = false, CancellationToken token = default)
     {
         var sqlStmt = $"SELECT * from {_tableName}";
 
-        await _connection.OpenAsync(token);
+        await EnsureOpenAsync(token);
 
         await using var command = _connection.CreateCommand();
         command.CommandText = sqlStmt;
         await using var read = await command.ExecuteReaderAsync(token);
 
         var results = new List<T>();
-
         while (await read.ReadAsync(token))
-            results.Add(FillInstanceFromDb(read));
+            results.Add((T)FillInstanceFromDb(typeof(T), read,_fieldInfos, HasAttribute));
         
+        if (enableEagerLoading)
+            await EagerLoadRelationsAsync(results, token);
         return results;
     }
 
     public async Task<int?> AddAsync(T element, CancellationToken token = default)
     {
-        var nonAutoIncList = _fieldInfos.Where(x => !x.AutoIncrement && x.Prop.GetCustomAttribute<BaseAttribute>() is not null).ToList();
+        var nonAutoIncList = _fieldInfos
+            .Where(x => !x.AutoIncrement && x.Prop.GetCustomAttribute<BaseAttribute>() is not null)
+            .ToList();
+
         var sqlStmt = DatabaseUtils.GenerateInsertStmt(
             tableName: _tableName,
             id: _fieldInfos.Single(x => x.IsPrimaryKey).Name,
@@ -87,21 +104,24 @@ public class DbSet<T> where T : class
             connection: _connection);
 
 
-        await _connection.OpenAsync(token);
+        await EnsureOpenAsync(token);
+
         await using var command = _connection.CreateCommand();
         command.CommandText = sqlStmt;
 
         UpdateEntitySqlStmtToCommand(command, nonAutoIncList, element);
+
         var result = await command.ExecuteScalarAsync(token);
-        return result is int resultInt ? resultInt : null;
+        if (result is null) return null;
+        return Convert.ToInt32(result);
     }
 
-    public async Task<T?> GetByIdAsync(int id, CancellationToken token = default)
+    public async Task<T?> GetByIdAsync(int id, bool enableEagerLoading = false, CancellationToken token = default)
     {
         var keyColumn = _fieldInfos.First(x => x.IsPrimaryKey);
         var sqlStmt = $"SELECT * from {_tableName} where {keyColumn.Name} = @{keyColumn.Name}";
 
-        await _connection.OpenAsync(token);
+        await EnsureOpenAsync(token);
         await using var command = _connection.CreateCommand();
         command.CommandText = sqlStmt;
 
@@ -111,7 +131,10 @@ public class DbSet<T> where T : class
 
         if (!await reader.ReadAsync(token)) return null;
 
-        return FillInstanceFromDb(reader);
+        var result = (T)FillInstanceFromDb(typeof(T), reader, _fieldInfos, HasAttribute);
+        if (enableEagerLoading)
+            await EagerLoadRelationsAsync([result], token);
+        return result;
     }
 
     public async Task<bool> UpdateAsync(T element, CancellationToken token = default)
@@ -126,7 +149,7 @@ public class DbSet<T> where T : class
             id: keyCol.Name,
             columns: nonPrimFields.Select(c => c.Name).ToList());
 
-        await _connection.OpenAsync(token);
+        await EnsureOpenAsync(token);
         await using var command = _connection.CreateCommand();
         command.CommandText = sqlStmt;
 
@@ -141,7 +164,7 @@ public class DbSet<T> where T : class
         var keyCol = _fieldInfos.First(c => c.IsPrimaryKey);
         var sqlStmt = $"DELETE FROM {_tableName} WHERE {keyCol.Name} = @{keyCol.Name}";
 
-        await _connection.OpenAsync(token);
+        await EnsureOpenAsync(token);
         await using var command = _connection.CreateCommand();
         command.CommandText = sqlStmt;
 
@@ -151,4 +174,69 @@ public class DbSet<T> where T : class
 
         return affected > 0;
     }
+
+    private async Task EagerLoadRelationsAsync(IEnumerable<T> parentsList, CancellationToken token)
+    {
+        var relations = DatabaseUtils.GetOneToManyRelations(typeof(T));
+        var parents = parentsList as IList<T> ?? parentsList.ToList();
+        if (parents.Count == 0 || !relations.Any()) return;
+
+        var parentKey = _fieldInfos.First(f => f.IsPrimaryKey);
+        var parentKeyProp = parentKey.Prop;
+
+        var allParentIds = parents
+            .Select(p => Convert.ToInt32(parentKeyProp.GetValue(p)!))
+            .Distinct()
+            .ToList();
+        if (allParentIds.Count == 0) return;
+
+        foreach (var (navProp, meta) in relations)
+        {
+            var childType = meta.TargetEntity;
+            var fkName = meta.MappedBy;
+            var childTable = AttributeConverter.GetTableName(childType);
+            var childFields = AttributeConverter.GetFieldInfos(childType);
+
+            await EnsureOpenAsync(token);
+            var command = _connection.CreateCommand();
+
+            for (int i = 0; i < allParentIds.Count; i++)
+                UpdateSqlStmtToCommand(command,$"p{i}", allParentIds[i]);
+            
+
+            var paramNames = Enumerable.Range(0, allParentIds.Count)
+                .Select(i => $"@p{i}")
+                .ToList();
+
+            command.CommandText = $"SELECT * FROM {childTable} WHERE {fkName} IN ({string.Join(",", paramNames)})";
+
+            var childrenByParent = new Dictionary<int, IList<object>>();
+            await using var reader = await command.ExecuteReaderAsync(token);
+
+            while (await reader.ReadAsync(token))
+            {
+                var child = FillInstanceFromDb(childType, reader, childFields, HasAttribute);
+
+                var fkVal = (int)Convert.ChangeType(reader[fkName], typeof(int))!;
+                if (!childrenByParent.TryGetValue(fkVal, out var list))
+                    list = childrenByParent[fkVal] = new List<object>();
+
+                list.Add(child);
+            }
+
+            foreach (var parent in parents)
+            {
+                var id = Convert.ToInt32(parentKeyProp.GetValue(parent)!);
+                var listType = typeof(List<>).MakeGenericType(childType);
+                var list = (IList)Activator.CreateInstance(listType)!;
+
+                if (childrenByParent.TryGetValue(id, out var kids))
+                    foreach (var k in kids) 
+                        list.Add(k);
+
+                navProp.SetValue(parent, list);
+            }
+        }
+    }
+
 }
